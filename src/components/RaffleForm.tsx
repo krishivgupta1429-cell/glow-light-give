@@ -19,7 +19,6 @@ const RaffleForm = () => {
     fullName: "",
     email: "",
     phone: "",
-    dreidels: "",
     reason: "",
     otherReason: "",
     support: "",
@@ -157,28 +156,6 @@ const RaffleForm = () => {
           <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
         </div>
 
-        {/* Dreidels */}
-        <div className="space-y-2">
-          <Label htmlFor="dreidels" className="text-foreground font-medium text-base">
-            Guess how many Dreidels! <span className="text-gold">*</span>
-          </Label>
-          <Input
-            id="dreidels"
-            placeholder="Enter your guess"
-            value={formData.dreidels}
-            onChange={(e) => setFormData({ ...formData, dreidels: e.target.value })}
-            required
-            className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)]"
-          />
-        </div>
-
-        {/* Separator */}
-        <div className="flex items-center justify-center py-4">
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-          <div className="mx-4 text-2xl animate-candle-flicker">✨</div>
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-        </div>
-
         {/* Reason */}
         <div className="space-y-3">
           <Label className="text-foreground font-medium text-base">
@@ -191,28 +168,22 @@ const RaffleForm = () => {
             }}
             className="space-y-2"
           >
-            <Label htmlFor="community" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
-              <RadioGroupItem value="community" id="community" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+            <Label htmlFor="cultures" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="cultures" id="cultures" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
               <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
-                Community celebration
+                I enjoy learning about other cultures
               </span>
             </Label>
-            <Label htmlFor="tradition" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
-              <RadioGroupItem value="tradition" id="tradition" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+            <Label htmlFor="jewish" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="jewish" id="jewish" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
               <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
-                Jewish tradition and culture
+                I'm Jewish
               </span>
             </Label>
-            <Label htmlFor="family" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
-              <RadioGroupItem value="family" id="family" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+            <Label htmlFor="support" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="support" id="support" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
               <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
-                Family-friendly atmosphere
-              </span>
-            </Label>
-            <Label htmlFor="lighting" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
-              <RadioGroupItem value="lighting" id="lighting" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
-              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
-                The beautiful menorah lighting
+                I like to show my support for the Jewish Community
               </span>
             </Label>
             <Label htmlFor="other" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">

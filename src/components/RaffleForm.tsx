@@ -189,38 +189,38 @@ const RaffleForm = () => {
             onValueChange={(value) => {
               setFormData({ ...formData, reason: value, otherReason: value !== "other" ? "" : formData.otherReason });
             }}
-            className="space-y-3"
+            className="space-y-2"
           >
-            <div className="flex items-center space-x-3 group p-2 rounded-lg hover:bg-gold/5 transition-colors duration-200">
-              <RadioGroupItem value="community" id="community" className="border-gold/60 text-gold data-[state=checked]:bg-gold data-[state=checked]:border-gold" />
-              <Label htmlFor="community" className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200">
+            <Label htmlFor="community" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="community" id="community" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
                 Community celebration
-              </Label>
-            </div>
-            <div className="flex items-center space-x-3 group p-2 rounded-lg hover:bg-gold/5 transition-colors duration-200">
-              <RadioGroupItem value="tradition" id="tradition" className="border-gold/60 text-gold data-[state=checked]:bg-gold data-[state=checked]:border-gold" />
-              <Label htmlFor="tradition" className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200">
+              </span>
+            </Label>
+            <Label htmlFor="tradition" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="tradition" id="tradition" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
                 Jewish tradition and culture
-              </Label>
-            </div>
-            <div className="flex items-center space-x-3 group p-2 rounded-lg hover:bg-gold/5 transition-colors duration-200">
-              <RadioGroupItem value="family" id="family" className="border-gold/60 text-gold data-[state=checked]:bg-gold data-[state=checked]:border-gold" />
-              <Label htmlFor="family" className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200">
+              </span>
+            </Label>
+            <Label htmlFor="family" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="family" id="family" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
                 Family-friendly atmosphere
-              </Label>
-            </div>
-            <div className="flex items-center space-x-3 group p-2 rounded-lg hover:bg-gold/5 transition-colors duration-200">
-              <RadioGroupItem value="lighting" id="lighting" className="border-gold/60 text-gold data-[state=checked]:bg-gold data-[state=checked]:border-gold" />
-              <Label htmlFor="lighting" className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200">
+              </span>
+            </Label>
+            <Label htmlFor="lighting" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="lighting" id="lighting" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
                 The beautiful menorah lighting
-              </Label>
-            </div>
-            <div className="flex items-center space-x-3 group p-2 rounded-lg hover:bg-gold/5 transition-colors duration-200">
-              <RadioGroupItem value="other" id="other" className="border-gold/60 text-gold data-[state=checked]:bg-gold data-[state=checked]:border-gold" aria-controls="other-reason-textarea" />
-              <Label htmlFor="other" className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200">
+              </span>
+            </Label>
+            <Label htmlFor="other" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="other" id="other" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" aria-controls="other-reason-textarea" />
+              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
                 Other
-              </Label>
-            </div>
+              </span>
+            </Label>
           </RadioGroup>
           {/* Conditional textarea for "Other" option */}
           {formData.reason === "other" && (
@@ -262,18 +262,18 @@ const RaffleForm = () => {
             }}
             className="flex gap-6"
           >
-            <div className="flex items-center space-x-3 group p-2 rounded-lg hover:bg-gold/5 transition-colors duration-200">
-              <RadioGroupItem value="yes" id="yes" className="border-gold/60 text-gold data-[state=checked]:bg-gold data-[state=checked]:border-gold" aria-controls="sponsorship-section" />
-              <Label htmlFor="yes" className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200">
+            <Label htmlFor="yes" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="yes" id="yes" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" aria-controls="sponsorship-section" />
+              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
                 Yes
-              </Label>
-            </div>
-            <div className="flex items-center space-x-3 group p-2 rounded-lg hover:bg-gold/5 transition-colors duration-200">
-              <RadioGroupItem value="no" id="no" className="border-gold/60 text-gold data-[state=checked]:bg-gold data-[state=checked]:border-gold" />
-              <Label htmlFor="no" className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200">
+              </span>
+            </Label>
+            <Label htmlFor="no" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="no" id="no" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
                 No
-              </Label>
-            </div>
+              </span>
+            </Label>
           </RadioGroup>
           
           {/* Conditional Sponsorship Section */}

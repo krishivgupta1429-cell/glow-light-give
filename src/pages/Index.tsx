@@ -82,10 +82,16 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Footer Glow */}
-        <div className="mt-16 text-center animate-fade-in">
-          <p className="text-sm text-foreground/70 font-light">
-            Spreading light and warmth this Hanukkah season 🕎
+        {/* Footer */}
+        <div className="mt-16 text-center animate-fade-in space-y-4 py-6">
+          {/* Main message */}
+          <p className="text-lg md:text-xl text-gold font-light tracking-wide drop-shadow-[0_0_10px_rgba(255,215,0,0.3)]">
+            May the lights of Chanukah bring warmth and joy to your home🕎
+          </p>
+          
+          {/* Contact message */}
+          <p className="text-sm text-foreground/60 font-normal">
+            Questions? Contact Chabad Traverse City
           </p>
         </div>
       </div>

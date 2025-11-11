@@ -1,6 +1,11 @@
 import { useEffect, useRef } from 'react';
 
-const MenorahCandles = () => {
+interface MenorahCandlesProps {
+  isMobile?: boolean;
+  prefersReducedMotion?: boolean;
+}
+
+const MenorahCandles = ({ isMobile = false, prefersReducedMotion = false }: MenorahCandlesProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
   // Candle positions - Traditional menorah arrangement with arched structure
@@ -25,26 +30,43 @@ const MenorahCandles = () => {
   ];
 
   useEffect(() => {
-    // Add subtle random flicker to each flame
-    const interval = setInterval(() => {
-      if (svgRef.current) {
-        const flames = svgRef.current.querySelectorAll('.flame');
-        flames.forEach((flame) => {
-          const element = flame as SVGElement;
-          const randomOffset = (Math.random() - 0.5) * 1.5;
-          const randomScale = 1 + (Math.random() - 0.5) * 0.08;
-          element.style.transform = `translateY(${randomOffset}px) scaleY(${randomScale})`;
-        });
+    // Pause flicker animation on mobile or when reduced motion is preferred
+    if (isMobile || prefersReducedMotion) return;
+    
+    // Add subtle random flicker to each flame using requestAnimationFrame
+    let animationFrameId: number;
+    let lastTime = 0;
+    const interval = 150; // Update every 150ms
+    
+    const animate = (currentTime: number) => {
+      if (currentTime - lastTime >= interval) {
+        if (svgRef.current) {
+          const flames = svgRef.current.querySelectorAll('.flame');
+          flames.forEach((flame) => {
+            const element = flame as SVGElement;
+            const randomOffset = (Math.random() - 0.5) * 1.5;
+            const randomScale = 1 + (Math.random() - 0.5) * 0.08;
+            element.style.transform = `translateY(${randomOffset}px) scaleY(${randomScale})`;
+          });
+        }
+        lastTime = currentTime;
       }
-    }, 150);
+      animationFrameId = requestAnimationFrame(animate);
+    };
+    
+    animationFrameId = requestAnimationFrame(animate);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [isMobile, prefersReducedMotion]);
 
   return (
     <div className="relative w-full flex justify-center items-center py-6 pt-12 pb-4">
       {/* Outer glow layers - seamless blending with background */}
-      <div className="absolute inset-0 bg-gradient-radial from-amber/20 via-gold/10 to-transparent blur-3xl opacity-40 animate-gentle-pulse" />
+      <div className={`absolute inset-0 bg-gradient-radial from-amber/20 via-gold/10 to-transparent blur-3xl opacity-40 ${!isMobile && !prefersReducedMotion ? 'animate-gentle-pulse' : ''}`} />
       <div className="absolute inset-0 bg-gradient-radial from-gold/12 to-transparent blur-2xl opacity-25" />
       
       {/* Subtle base lighting effect - soft and refined */}
@@ -162,9 +184,9 @@ const MenorahCandles = () => {
                 rx="8"
                 ry={flameHaloHeight - 2}
                 fill="rgba(255, 184, 77, 0.15)"
-                className="animate-gentle-pulse"
+                className={!isMobile && !prefersReducedMotion ? 'animate-gentle-pulse' : ''}
                 style={{
-                  animationDelay: `${index * 0.15}s`,
+                  animationDelay: !isMobile && !prefersReducedMotion ? `${index * 0.15}s` : '0s',
                 }}
               />
               
@@ -177,10 +199,11 @@ const MenorahCandles = () => {
                 fill="url(#flameGradient)"
                 filter="url(#flameGlow)"
                 opacity="0.98"
-                className="flame animate-candle-flicker"
+                className={`flame ${!isMobile && !prefersReducedMotion ? 'animate-candle-flicker' : ''}`}
                 style={{
-                  animationDelay: `${index * 0.2}s`,
+                  animationDelay: !isMobile && !prefersReducedMotion ? `${index * 0.2}s` : '0s',
                   transition: 'transform 0.15s ease-out',
+                  willChange: !isMobile && !prefersReducedMotion ? 'transform' : 'auto',
                 }}
               />
               
@@ -192,10 +215,11 @@ const MenorahCandles = () => {
                 ry={flameCoreHeight - 1}
                 fill="url(#flameCore)"
                 opacity="1"
-                className="flame animate-candle-flicker"
+                className={`flame ${!isMobile && !prefersReducedMotion ? 'animate-candle-flicker' : ''}`}
                 style={{
-                  animationDelay: `${index * 0.2}s`,
+                  animationDelay: !isMobile && !prefersReducedMotion ? `${index * 0.2}s` : '0s',
                   transition: 'transform 0.15s ease-out',
+                  willChange: !isMobile && !prefersReducedMotion ? 'transform' : 'auto',
                 }}
               />
               
@@ -205,9 +229,9 @@ const MenorahCandles = () => {
                 cy={candleTopY - 6}
                 r="5"
                 fill="rgba(255, 184, 77, 0.08)"
-                className="animate-gentle-pulse"
+                className={!isMobile && !prefersReducedMotion ? 'animate-gentle-pulse' : ''}
                 style={{
-                  animationDelay: `${index * 0.12}s`,
+                  animationDelay: !isMobile && !prefersReducedMotion ? `${index * 0.12}s` : '0s',
                 }}
               />
             </g>

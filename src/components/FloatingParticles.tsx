@@ -134,14 +134,22 @@ const FloatingParticles = () => {
 
     animate();
 
+    // Debounced resize handler
+    let resizeTimeout: NodeJS.Timeout;
     const handleResize = () => {
-      setCanvasSize();
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        setCanvasSize();
+      }, 100);
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
     };
   }, []);
 

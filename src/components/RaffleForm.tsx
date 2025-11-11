@@ -243,13 +243,21 @@ const RaffleForm = () => {
                     // Expand: show sponsorships and smooth scroll
                     setFormData({ ...formData, showSponsorships: true });
                     // Smooth scroll to sponsorship section after it renders
+                    // Respect prefers-reduced-motion
+                    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
                     setTimeout(() => {
                       if (sponsorshipSectionRef.current) {
                         const firstCheckbox = sponsorshipSectionRef.current.querySelector('[id^="sponsorship-"]');
                         if (firstCheckbox) {
-                          firstCheckbox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          firstCheckbox.scrollIntoView({ 
+                            behavior: prefersReducedMotion ? 'auto' : 'smooth', 
+                            block: 'start' 
+                          });
                         } else {
-                          sponsorshipSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          sponsorshipSectionRef.current.scrollIntoView({ 
+                            behavior: prefersReducedMotion ? 'auto' : 'smooth', 
+                            block: 'start' 
+                          });
                         }
                       }
                     }, 100);
@@ -259,18 +267,24 @@ const RaffleForm = () => {
                 aria-controls="sponsorship-section"
                 className="px-6 py-2.5 rounded-full font-medium transition-all duration-300 whitespace-nowrap flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-gold group"
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 213, 79, 0.5)';
-                  e.currentTarget.style.animation = 'pulse 1s ease-in-out';
+                  if (window.innerWidth > 768) {
+                    e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 213, 79, 0.5)';
+                    e.currentTarget.style.opacity = '0.95';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = '';
-                  e.currentTarget.style.animation = '';
+                  if (window.innerWidth > 768) {
+                    e.currentTarget.style.boxShadow = '';
+                    e.currentTarget.style.opacity = '1';
+                  }
                 }}
                 onFocus={(e) => {
-                  e.currentTarget.style.animation = 'pulse 1s ease-in-out';
+                  if (window.innerWidth > 768) {
+                    e.currentTarget.style.opacity = '0.95';
+                  }
                 }}
                 onBlur={(e) => {
-                  e.currentTarget.style.animation = '';
+                  e.currentTarget.style.opacity = '1';
                 }}
                 style={{
                   backgroundColor: '#FFD54F',

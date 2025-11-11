@@ -243,4 +243,19 @@ All colors MUST be HSL.
     width: 10px !important;
     height: 10px !important;
   }
+  
+  /* Bounce animation for helper text chevron - every 4s */
+  @keyframes bounce-slow-delayed {
+    0%, 75% {
+      transform: translateY(0);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    87.5% {
+      transform: translateY(-8px);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
 }

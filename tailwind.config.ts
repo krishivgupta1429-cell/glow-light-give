@@ -159,6 +159,16 @@ export default {
             opacity: "0",
           },
         },
+        "bounce-slow": {
+          "0%, 100%": {
+            transform: "translateY(0)",
+            animationTimingFunction: "cubic-bezier(0.8, 0, 1, 1)",
+          },
+          "50%": {
+            transform: "translateY(-8px)",
+            animationTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -172,6 +182,7 @@ export default {
         "shimmer-bg": "shimmer-bg 15s ease-in-out infinite",
         "fade-in": "fade-in 0.8s ease-out",
         "glow-ripple": "glow-ripple 2s ease-out infinite",
+        "bounce-slow": "bounce-slow 1s ease-in-out infinite",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

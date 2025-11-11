@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,16 +12,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
 const RaffleForm = () => {
+  const sponsorshipSectionRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     phone: "",
     reason: "",
     otherReason: "",
-    support: "",
+    showSponsorships: false,
     sponsorships: [] as string[],
     cansQuantity: "",
     comments: "",
@@ -173,25 +177,25 @@ const RaffleForm = () => {
               <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
                 I enjoy learning about other cultures
               </span>
-            </Label>
+              </Label>
             <Label htmlFor="jewish" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
               <RadioGroupItem value="jewish" id="jewish" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
               <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
                 I'm Jewish
               </span>
-            </Label>
+              </Label>
             <Label htmlFor="support" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
               <RadioGroupItem value="support" id="support" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
               <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
                 I like to show my support for the Jewish Community
               </span>
-            </Label>
+              </Label>
             <Label htmlFor="other" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
               <RadioGroupItem value="other" id="other" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" aria-controls="other-reason-textarea" />
               <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
                 Other
               </span>
-            </Label>
+              </Label>
           </RadioGroup>
           {/* Conditional textarea for "Other" option */}
           {formData.reason === "other" && (
@@ -217,45 +221,100 @@ const RaffleForm = () => {
         </div>
 
         {/* Support */}
-        <div className="space-y-3">
-          <Label className="text-foreground font-medium text-base">
-            Would you like to support Menorah in the Square? <span className="text-gold">*</span>
-          </Label>
-          <RadioGroup
-            value={formData.support}
-            onValueChange={(value) => {
-              if (value === "no") {
-                // Clear sponsorships when No is selected
-                setFormData({ ...formData, support: value, sponsorships: [] });
-              } else {
-                setFormData({ ...formData, support: value });
-              }
-            }}
-            className="flex gap-6"
-          >
-            <Label htmlFor="yes" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
-              <RadioGroupItem value="yes" id="yes" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" aria-controls="sponsorship-section" />
-              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
-                Yes
-              </span>
-            </Label>
-            <Label htmlFor="no" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
-              <RadioGroupItem value="no" id="no" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
-              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
-                No
-              </span>
-            </Label>
-          </RadioGroup>
+        <div className="space-y-4">
+          {/* Intro line and CTA */}
+          <div className="space-y-6">
+            <p className="text-foreground font-medium text-base text-left">
+              This free community event is made possible by generous donors like you. Please consider supporting and being part of this beautiful celebration.
+            </p>
+            <div className="flex flex-col items-center space-y-2">
+              <Button
+                type="button"
+                ref={buttonRef}
+                onClick={() => {
+                  if (formData.showSponsorships) {
+                    // Collapse: clear sponsorships and return focus to button
+                    setFormData({ ...formData, showSponsorships: false, sponsorships: [] });
+                    // Return focus to button after state update
+                    setTimeout(() => {
+                      buttonRef.current?.focus();
+                    }, 0);
+                  } else {
+                    // Expand: show sponsorships and smooth scroll
+                    setFormData({ ...formData, showSponsorships: true });
+                    // Smooth scroll to sponsorship section after it renders
+                    setTimeout(() => {
+                      if (sponsorshipSectionRef.current) {
+                        const firstCheckbox = sponsorshipSectionRef.current.querySelector('[id^="sponsorship-"]');
+                        if (firstCheckbox) {
+                          firstCheckbox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        } else {
+                          sponsorshipSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }
+                    }, 100);
+                  }
+                }}
+                aria-expanded={formData.showSponsorships}
+                aria-controls="sponsorship-section"
+                className="px-6 py-2.5 rounded-full font-medium transition-all duration-300 whitespace-nowrap flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-gold group"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 213, 79, 0.5)';
+                  e.currentTarget.style.animation = 'pulse 1s ease-in-out';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = '';
+                  e.currentTarget.style.animation = '';
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.animation = 'pulse 1s ease-in-out';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.animation = '';
+                }}
+                style={{
+                  backgroundColor: '#FFD54F',
+                  color: '#1A0D00',
+                  border: 'none',
+                }}
+              >
+                <span>{formData.showSponsorships ? "Hide Support Options" : "Yes, I'd like to support"}</span>
+                {formData.showSponsorships ? (
+                  <ChevronUp className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                )}
+              </Button>
+              {!formData.showSponsorships && (
+                <p className="text-xs text-foreground/60 text-center flex items-center justify-center gap-1.5">
+                  <span>View sponsorship levels</span>
+                  <ChevronDown 
+                    className="h-3 w-3" 
+                    aria-hidden="true" 
+                    style={{ 
+                      animation: 'bounce-slow-delayed 4s ease-in-out infinite',
+                    }} 
+                  />
+                </p>
+              )}
+            </div>
+          </div>
           
           {/* Conditional Sponsorship Section */}
-          {formData.support === "yes" && (
-            <div id="sponsorship-section" className="space-y-4 mt-4 pt-4 border-t border-gold/20 animate-fade-in" role="region" aria-labelledby="sponsorship-label">
+          {formData.showSponsorships && (
+            <div 
+              id="sponsorship-section" 
+              ref={sponsorshipSectionRef}
+              className="space-y-4 mt-4 pt-4 border-t border-gold/20 animate-fade-in" 
+              role="region" 
+              aria-labelledby="sponsorship-label"
+            >
               {/* Label and Checkboxes Layout */}
               <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
                 {/* Left Label */}
                 <Label id="sponsorship-label" className="text-foreground font-semibold text-base whitespace-nowrap pt-1">
                   I would like to be a
-                </Label>
+          </Label>
                 
                 {/* Right: Vertical List of Checkboxes */}
                 <div className="flex-1 space-y-2.5 w-full">
@@ -287,8 +346,8 @@ const RaffleForm = () => {
                           <span className={`font-semibold ml-4 whitespace-nowrap ${isChecked ? "text-gold" : "text-gold/80"}`}>
                             ${option.amount}
                           </span>
-                        </Label>
-                      </div>
+              </Label>
+            </div>
                     );
                   })}
                 </div>
@@ -300,6 +359,41 @@ const RaffleForm = () => {
                 <span className="text-gold font-bold text-lg md:text-xl">
                   ${sponsorshipTotal.toFixed(2)} USD
                 </span>
+              </div>
+              
+              {/* Lamplighter Wall Acknowledgement */}
+              <div className="space-y-3 pt-4 mt-4 border-t border-gold/20">
+                <p className="text-xs text-foreground/60 text-center">
+                  Thank you for your generous support — you're now eligible to be recognized on the Lamplighter Wall.
+                </p>
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    aria-disabled="true"
+                    className="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold/20 via-amber/15 to-gold/20 border border-gold/40 text-gold font-medium cursor-not-allowed opacity-75 hover:opacity-90 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] transition-all duration-200 active:scale-95 relative overflow-hidden"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      // Visual feedback only - no action
+                      const button = e.currentTarget;
+                      const rect = button.getBoundingClientRect();
+                      const ripple = document.createElement('span');
+                      const size = Math.max(rect.width, rect.height);
+                      const x = e.clientX - rect.left - size / 2;
+                      const y = e.clientY - rect.top - size / 2;
+                      
+                      ripple.style.width = ripple.style.height = `${size}px`;
+                      ripple.style.left = `${x}px`;
+                      ripple.style.top = `${y}px`;
+                      ripple.className = 'absolute rounded-full bg-gold/20 pointer-events-none animate-ping';
+                      ripple.style.animationDuration = '0.6s';
+                      
+                      button.appendChild(ripple);
+                      setTimeout(() => ripple.remove(), 600);
+                    }}
+                  >
+                    <span className="relative z-10">Join the Lamplighter Wall</span>
+                  </button>
+                </div>
               </div>
               
               {/* Hidden inputs for form submission */}
@@ -433,12 +527,12 @@ const RaffleForm = () => {
               }
               className="mt-1 border-gold/60 data-[state=checked]:bg-gold data-[state=checked]:border-gold ring-offset-background focus-visible:ring-2 focus-visible:ring-gold/40 transition-all duration-200"
             />
-            <Label
+              <Label
               htmlFor="emailUpdatesOptIn"
               className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200 text-sm leading-relaxed"
-            >
+              >
               Yes, I would like to receive email updates about future Chabad Traverse City events and programs
-            </Label>
+              </Label>
           </div>
         </div>
       </div>

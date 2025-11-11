@@ -452,11 +452,26 @@ const RaffleForm = () => {
           </div>
         </div>
 
+        {/* Glowing Divider Separator */}
+        <div className="flex items-center justify-center py-6 md:py-8 my-4 md:my-6">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
+          <div className="mx-4 text-2xl animate-candle-flicker">✨</div>
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
+        </div>
+
         {/* Can Quantity Selector */}
-        <div className="space-y-2">
-          <Label htmlFor="cansQuantity" className="text-foreground font-medium text-base">
-            How many cans would you like us to shop for you?
-          </Label>
+        <div className="space-y-3">
+          <div className="relative">
+            <Label 
+              htmlFor="cansQuantity" 
+              className="text-foreground font-bold text-lg md:text-xl block relative pb-2"
+            >
+              <span className="relative z-10 drop-shadow-[0_0_8px_rgba(255,215,0,0.3)]">How many cans would you like us to shop for you?</span>
+              {/* Golden underline/highlight effect */}
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-gold/60 to-transparent opacity-70 animate-pulse" />
+              <span className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent shadow-[0_0_6px_rgba(255,215,0,0.4)]" />
+            </Label>
+          </div>
           <Select
             value={formData.cansQuantity}
             onValueChange={(value) => setFormData({ ...formData, cansQuantity: value })}

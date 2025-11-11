@@ -1,6 +1,6 @@
 import FloatingParticles from "@/components/FloatingParticles";
 import RaffleForm from "@/components/RaffleForm";
-import menorahHero from "@/assets/menorah-hero.png";
+import MenorahCandles from "@/components/MenorahCandles";
 
 const Index = () => {
   return (
@@ -35,17 +35,10 @@ const Index = () => {
 
         {/* Hero Section */}
         <div className="text-center mb-12 animate-fade-in">
-          {/* Menorah Image with Candle Flicker Effect */}
+          {/* Menorah with Blended Candle Effect */}
           <div className="mb-8 flex justify-center">
-            <div className="relative animate-float">
-              {/* Multiple glow layers for depth */}
-              <div className="absolute inset-0 bg-gradient-radial from-amber/40 via-gold/20 to-transparent blur-3xl animate-gentle-pulse" />
-              <div className="absolute inset-0 bg-gradient-radial from-gold/30 to-transparent blur-2xl" />
-              <img
-                src={menorahHero}
-                alt="Menorah"
-                className="h-24 md:h-32 w-auto relative z-10 animate-candle-flicker drop-shadow-[0_0_30px_rgba(255,215,0,0.6)]"
-              />
+            <div className="relative animate-float w-full max-w-[400px] md:max-w-[500px]">
+              <MenorahCandles />
             </div>
           </div>
 

@@ -30,7 +30,10 @@ const FloatingParticles = () => {
     }
 
     const particles: Particle[] = [];
-    const particleCount = 80; // Increased for richer effect
+    // Reduce particle count on mobile for performance
+    const isMobile = window.innerWidth <= 768;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const particleCount = (isMobile || prefersReducedMotion) ? 6 : 80;
 
     // Gold color variations
     const goldColors = [
@@ -47,8 +50,12 @@ const FloatingParticles = () => {
         radius: Math.random() * 4 + 1.5, // Slightly larger particles
         vx: (Math.random() * 0.6 - 0.3) * 0.5, // Slower, more gentle movement
         vy: (Math.random() * -0.8 - 0.3) * 0.5,
-        opacity: Math.random() * 0.6 + 0.3,
-        baseOpacity: Math.random() * 0.6 + 0.3,
+        opacity: (isMobile || prefersReducedMotion) 
+          ? (Math.random() * 0.2 + 0.1) // 30-40% reduction on mobile
+          : (Math.random() * 0.6 + 0.3),
+        baseOpacity: (isMobile || prefersReducedMotion)
+          ? (Math.random() * 0.2 + 0.1)
+          : (Math.random() * 0.6 + 0.3),
         twinkle: Math.random() * Math.PI * 2, // Random starting phase for twinkle
         twinkleSpeed: Math.random() * 0.02 + 0.01,
         color: goldColors[Math.floor(Math.random() * goldColors.length)],
@@ -134,12 +141,14 @@ const FloatingParticles = () => {
 
     animate();
 
-    // Debounced resize handler
+    // Debounced resize handler - batch reads/writes with requestAnimationFrame
     let resizeTimeout: NodeJS.Timeout;
     const handleResize = () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        setCanvasSize();
+        requestAnimationFrame(() => {
+          setCanvasSize();
+        });
       }, 100);
     };
 

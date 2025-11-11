@@ -104,8 +104,8 @@ const RaffleForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 w-full">
-      <div className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-8 md:space-y-8 w-full form-mobile">
+      <div className="space-y-4 md:space-y-6">
         {/* Full Name */}
         <div className="space-y-2">
           <Label htmlFor="fullName" className="text-foreground font-medium text-base">
@@ -243,24 +243,27 @@ const RaffleForm = () => {
                     // Expand: show sponsorships and smooth scroll
                     setFormData({ ...formData, showSponsorships: true });
                     // Smooth scroll to sponsorship section after it renders
-                    // Respect prefers-reduced-motion
+                    // Disable on mobile for performance
                     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                    setTimeout(() => {
-                      if (sponsorshipSectionRef.current) {
-                        const firstCheckbox = sponsorshipSectionRef.current.querySelector('[id^="sponsorship-"]');
-                        if (firstCheckbox) {
-                          firstCheckbox.scrollIntoView({ 
-                            behavior: prefersReducedMotion ? 'auto' : 'smooth', 
-                            block: 'start' 
-                          });
-                        } else {
-                          sponsorshipSectionRef.current.scrollIntoView({ 
-                            behavior: prefersReducedMotion ? 'auto' : 'smooth', 
-                            block: 'start' 
-                          });
+                    const isMobile = window.innerWidth <= 768;
+                    if (!isMobile) {
+                      setTimeout(() => {
+                        if (sponsorshipSectionRef.current) {
+                          const firstCheckbox = sponsorshipSectionRef.current.querySelector('[id^="sponsorship-"]');
+                          if (firstCheckbox) {
+                            firstCheckbox.scrollIntoView({ 
+                              behavior: prefersReducedMotion ? 'auto' : 'smooth', 
+                              block: 'start' 
+                            });
+                          } else {
+                            sponsorshipSectionRef.current.scrollIntoView({ 
+                              behavior: prefersReducedMotion ? 'auto' : 'smooth', 
+                              block: 'start' 
+                            });
+                          }
                         }
-                      }
-                    }, 100);
+                      }, 100);
+                    }
                   }
                 }}
                 aria-expanded={formData.showSponsorships}
@@ -319,28 +322,28 @@ const RaffleForm = () => {
             <div 
               id="sponsorship-section" 
               ref={sponsorshipSectionRef}
-              className="space-y-4 mt-4 pt-4 border-t border-gold/20 animate-fade-in" 
+              className="space-y-4 mt-4 pt-4 border-t border-gold/20 animate-fade-in content-offscreen" 
               role="region" 
               aria-labelledby="sponsorship-label"
             >
               {/* Label and Checkboxes Layout */}
-              <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
+              <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6 sponsorship-container">
                 {/* Left Label */}
-                <Label id="sponsorship-label" className="text-foreground font-semibold text-base whitespace-nowrap pt-1">
+                <Label id="sponsorship-label" className="text-foreground font-semibold text-base md:text-base whitespace-nowrap pt-1 sponsorship-label">
                   I would like to be a
           </Label>
                 
                 {/* Right: Vertical List of Checkboxes */}
-                <div className="flex-1 space-y-2.5 w-full">
+                <div className="flex-1 space-y-2 md:space-y-2.5 w-full sponsorship-list">
                   {sponsorshipOptions.map((option) => {
                     const isChecked = formData.sponsorships.includes(option.id);
                     return (
                       <div
                         key={option.id}
-                        className={`flex items-center space-x-3 group px-4 py-2.5 rounded-full border-2 transition-all duration-200 ${
+                        className={`flex items-center space-x-3 group sponsorship-card transition-opacity duration-200 ${
                           isChecked
-                            ? "border-gold bg-gold/15 shadow-[0_0_20px_rgba(255,215,0,0.4)]"
-                            : "border-gold/30 bg-gold/5 hover:bg-gold/10 hover:border-gold/50 hover:shadow-[0_0_12px_rgba(255,215,0,0.25)]"
+                            ? "border-gold bg-gold/15"
+                            : "border-gold/30 bg-gold/5"
                         }`}
                       >
                         <Checkbox
@@ -349,15 +352,15 @@ const RaffleForm = () => {
                           onCheckedChange={(checked) => {
                             handleSponsorshipChange(option.id, checked as boolean);
                           }}
-                          className="border-gold/60 data-[state=checked]:bg-gold data-[state=checked]:border-gold ring-offset-background focus-visible:ring-2 focus-visible:ring-gold/40 transition-all duration-200 shrink-0"
+                          className="border-gold/60 data-[state=checked]:bg-gold data-[state=checked]:border-gold ring-offset-background focus-visible:ring-2 focus-visible:ring-gold/40 transition-opacity duration-200 shrink-0 sponsorship-checkbox"
                           aria-label={`${option.label} - $${option.amount}`}
                         />
                         <Label
                           htmlFor={`sponsorship-${option.id}`}
-                          className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200 flex-1 flex items-center justify-between text-sm md:text-base"
+                          className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200 flex-1 flex items-center justify-between sponsorship-label-text min-h-[44px]"
                         >
-                          <span className={isChecked ? "text-gold font-medium" : ""}>{option.label}</span>
-                          <span className={`font-semibold ml-4 whitespace-nowrap ${isChecked ? "text-gold" : "text-gold/80"}`}>
+                          <span className={`${isChecked ? "text-gold font-medium" : ""} sponsorship-title`}>{option.label}</span>
+                          <span className={`font-semibold ml-4 whitespace-nowrap ${isChecked ? "text-gold" : "text-gold/80"} sponsorship-price`}>
                             ${option.amount}
                           </span>
               </Label>
@@ -497,7 +500,7 @@ const RaffleForm = () => {
             >
               <SelectValue placeholder="Select quantity" />
             </SelectTrigger>
-            <SelectContent className="bg-card/95 backdrop-blur-md border-border/60 text-foreground shadow-lg">
+            <SelectContent className="bg-card/95 backdrop-blur-md border-border/60 text-foreground shadow-lg mobile-select-content">
               {canOptions.map((option) => (
                 <SelectItem
                   key={option.quantity}

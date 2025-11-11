@@ -393,6 +393,170 @@ All colors MUST be HSL.
     .animate-float {
       animation: none !important;
     }
+    
+    /* Form spacing compression - reduce by 20-25% */
+    .form-mobile .space-y-4 > * + * {
+      margin-top: 0.75rem; /* ~20% reduction from 1rem */
+    }
+    
+    .form-mobile .space-y-6 > * + * {
+      margin-top: 1.125rem; /* ~25% reduction from 1.5rem */
+    }
+    
+    .form-mobile .space-y-2 > * + * {
+      margin-top: 0.375rem; /* ~25% reduction from 0.5rem */
+    }
+    
+    /* Reduce line-height on mobile */
+    .form-mobile label,
+    .form-mobile p,
+    .form-mobile span {
+      line-height: 1.4; /* Reduced from 1.7 */
+    }
+    
+    /* Sponsorship cards - mobile optimizations */
+    .sponsorship-card {
+      padding: 12px 14px !important;
+      gap: 8px !important;
+      border-radius: 14px !important;
+      max-height: 96px;
+      overflow: hidden;
+      contain: layout paint style;
+      border-width: 2px !important;
+    }
+    
+    .sponsorship-checkbox {
+      width: 28px !important;
+      height: 28px !important;
+      min-width: 28px !important;
+      min-height: 28px !important;
+      margin-right: 10px !important;
+    }
+    
+    .sponsorship-title {
+      font-size: 16px !important;
+      line-height: 1.3 !important;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .sponsorship-price {
+      font-size: 16px !important;
+    }
+    
+    .sponsorship-label {
+      font-size: 16px !important;
+    }
+    
+    .sponsorship-list {
+      gap: 8px !important;
+    }
+    
+    .sponsorship-container {
+      gap: 10px !important;
+    }
+    
+    /* Reduce shadows and blurs on mobile */
+    .sponsorship-card {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .sponsorship-card.border-gold.bg-gold\/15 {
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.2) !important;
+    }
+    
+    /* Dropdown optimizations */
+    [data-radix-select-content],
+    .mobile-select-content {
+      width: 100% !important;
+      max-width: 100vw !important;
+      max-height: 50vh !important;
+      overflow-y: auto !important;
+      backdrop-filter: blur(6px) !important;
+      -webkit-backdrop-filter: blur(6px) !important;
+    }
+    
+    [data-radix-select-viewport] {
+      max-height: calc(50vh - 60px) !important;
+      overflow-y: auto !important;
+    }
+    
+    /* Containment for performance */
+    .sponsorship-list {
+      contain: layout paint style;
+    }
+    
+    /* Reduce backdrop blur on mobile */
+    .backdrop-blur-md {
+      backdrop-filter: blur(6px) !important;
+      -webkit-backdrop-filter: blur(6px) !important;
+    }
+    
+    .backdrop-blur-sm {
+      backdrop-filter: blur(4px) !important;
+      -webkit-backdrop-filter: blur(4px) !important;
+    }
+    
+    /* GPU-friendly transitions - prefer opacity/transform only */
+    .sponsorship-card,
+    .sponsorship-checkbox,
+    .sponsorship-label-text {
+      transition: opacity 0.2s ease, transform 0.2s ease !important;
+      will-change: transform, opacity;
+    }
+    
+    /* Disable hover effects that use box-shadow on mobile */
+    .sponsorship-card:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+      transform: none !important;
+    }
+    
+    /* Disable hover shadow effects on mobile */
+    input:hover,
+    textarea:hover,
+    select:hover {
+      box-shadow: none !important;
+    }
+  }
+  
+  /* Extra small mobile optimizations */
+  @media (max-width: 480px) {
+    /* Further reduce sponsorship card sizes */
+    .sponsorship-card {
+      padding: 12px !important;
+      gap: 8px !important;
+      border-radius: 14px !important;
+      max-height: 88px;
+    }
+    
+    .sponsorship-checkbox {
+      width: 28px !important;
+      height: 28px !important;
+      margin-right: 10px !important;
+    }
+    
+    .sponsorship-title {
+      font-size: 15px !important;
+    }
+    
+    .sponsorship-price {
+      font-size: 16px !important;
+    }
+    
+    .sponsorship-label {
+      font-size: 15px !important;
+    }
+    
+    /* Further reduce form spacing */
+    .form-mobile .space-y-4 > * + * {
+      margin-top: 0.625rem;
+    }
+    
+    .form-mobile .space-y-6 > * + * {
+      margin-top: 1rem;
+    }
   }
   
   /* Respect prefers-reduced-motion */

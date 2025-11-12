@@ -396,39 +396,6 @@ All colors MUST be HSL.
   
   /* Mobile optimizations */
   @media (max-width: 768px) {
-    /* Match Submit button to sponsorship button proportions */
-    .submit-button {
-      /* Size and rhythm */
-      padding: 10px 16px !important; /* ~py-2.5 */
-      line-height: 1.2 !important;
-      font-size: 16px !important;
-      
-      /* Shape and shadow to match rounded-full style buttons */
-      border-radius: 9999px !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
-      
-      /* Width and centering */
-      width: 90% !important;
-      margin-left: auto !important;
-      margin-right: auto !important;
-      display: block !important;
-      min-height: 44px !important; /* consistent tap target */
-    }
-    
-    /* Ensure consistency for the Lamplighter button as well */
-    #sponsorship-section button[type="button"] {
-      min-height: 44px !important;
-      line-height: 1.2 !important;
-      font-size: 16px !important;
-      border-radius: 9999px !important;
-    }
-    
-    /* Remove any accidental extra vertical spacing inside buttons */
-    .submit-button span,
-    #sponsorship-section button[type="button"] span {
-      line-height: 1.2 !important;
-    }
-    
     /* Ensure tap targets are at least 44px */
     button, 
     [role="button"],

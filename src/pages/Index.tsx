@@ -2,10 +2,14 @@ import { useEffect, useState } from "react";
 import FloatingParticles from "@/components/FloatingParticles";
 import RaffleForm from "@/components/RaffleForm";
 import MenorahCandles from "@/components/MenorahCandles";
+import { usePerformanceLogger } from "@/hooks/use-performance-logger";
 
 const Index = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  
+  // Performance logging (dev only)
+  usePerformanceLogger();
 
   useEffect(() => {
     // Check if mobile (≤768px)
@@ -24,18 +28,34 @@ const Index = () => {
     checkMobile();
     mediaQuery.addEventListener('change', handleReducedMotionChange);
     
-    // Debounced resize handler
+    // Debounced resize handler with requestAnimationFrame batching
     let resizeTimeout: NodeJS.Timeout;
     const handleResize = () => {
       clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(checkMobile, 100);
+      resizeTimeout = setTimeout(() => {
+        requestAnimationFrame(checkMobile);
+      }, 100);
     };
     
     window.addEventListener('resize', handleResize, { passive: true });
     
+    // Debounced scroll handler (16ms = 60fps)
+    let scrollTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        // Scroll handling logic if needed
+      }, 16);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll);
       mediaQuery.removeEventListener('change', handleReducedMotionChange);
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
     };
   }, []);
 
@@ -46,11 +66,24 @@ const Index = () => {
       
       {/* Additional depth layers - candle light gradients radiating from center */}
       <div className="fixed inset-0 -z-10">
-        {/* Central glow behind menorah area */}
-        <div className={`absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-radial from-amber/20 via-gold/10 to-transparent blur-3xl opacity-60 ${!isMobile && !prefersReducedMotion ? 'animate-gentle-pulse' : ''}`} />
-        {/* Secondary warm glows */}
-        <div className="absolute top-1/3 left-1/4 w-[500px] h-[400px] bg-gradient-radial from-amber/15 via-transparent to-transparent blur-3xl opacity-40" />
-        <div className="absolute top-1/3 right-1/4 w-[500px] h-[400px] bg-gradient-radial from-gold/15 via-transparent to-transparent blur-3xl opacity-40" />
+        {/* Central glow behind menorah area - static on mobile, animated on desktop */}
+        {isMobile ? (
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-radial from-amber/15 via-gold/8 to-transparent opacity-50 mobile-glow-static" />
+        ) : (
+          <div className={`absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-radial from-amber/20 via-gold/10 to-transparent blur-3xl opacity-60 ${!prefersReducedMotion ? 'animate-gentle-pulse' : ''}`} />
+        )}
+        {/* Secondary warm glows - reduced on mobile */}
+        {isMobile ? (
+          <>
+            <div className="absolute top-1/3 left-1/4 w-[500px] h-[400px] bg-gradient-radial from-amber/10 via-transparent to-transparent opacity-25 mobile-glow-static" />
+            <div className="absolute top-1/3 right-1/4 w-[500px] h-[400px] bg-gradient-radial from-gold/10 via-transparent to-transparent opacity-25 mobile-glow-static" />
+          </>
+        ) : (
+          <>
+            <div className="absolute top-1/3 left-1/4 w-[500px] h-[400px] bg-gradient-radial from-amber/15 via-transparent to-transparent blur-3xl opacity-40" />
+            <div className="absolute top-1/3 right-1/4 w-[500px] h-[400px] bg-gradient-radial from-gold/15 via-transparent to-transparent blur-3xl opacity-40" />
+          </>
+        )}
         {/* Edge amber warmth */}
         <div className="absolute bottom-0 left-0 right-0 h-[400px] bg-gradient-to-t from-amber/10 via-transparent to-transparent" />
       </div>
@@ -70,7 +103,7 @@ const Index = () => {
         </div>
 
         {/* Hero Section */}
-        <div className="text-center mb-12 animate-fade-in">
+        <div className="hero-section text-center mb-12 animate-fade-in">
           {/* Menorah with Blended Candle Effect */}
           <div className="mb-8 flex justify-center">
             <div className={`relative w-full max-w-[400px] md:max-w-[500px] ${!isMobile && !prefersReducedMotion ? 'animate-float' : ''}`}>
@@ -91,9 +124,15 @@ const Index = () => {
 
         {/* Form Card with Glassmorphism */}
         <div className="relative animate-fade-in animation-delay-200">
-          {/* Multiple glow layers behind card for depth */}
-          <div className={`absolute -inset-6 bg-gradient-to-br from-gold/30 via-amber/20 to-gold/20 rounded-3xl blur-3xl opacity-40 ${!isMobile && !prefersReducedMotion ? 'animate-gentle-pulse' : ''}`} />
-          <div className="absolute -inset-4 bg-gradient-to-br from-gold/20 via-amber/15 to-transparent rounded-3xl blur-2xl opacity-30" />
+          {/* Multiple glow layers behind card for depth - simplified on mobile */}
+          {isMobile ? (
+            <div className="absolute -inset-4 bg-gradient-to-br from-gold/20 via-amber/15 to-gold/15 rounded-3xl opacity-30 mobile-glow-static" />
+          ) : (
+            <>
+              <div className={`absolute -inset-6 bg-gradient-to-br from-gold/30 via-amber/20 to-gold/20 rounded-3xl blur-3xl opacity-40 ${!prefersReducedMotion ? 'animate-gentle-pulse' : ''}`} />
+              <div className="absolute -inset-4 bg-gradient-to-br from-gold/20 via-amber/15 to-transparent rounded-3xl blur-2xl opacity-30" />
+            </>
+          )}
           
           {/* Main Glass Card */}
           <div className="relative glass-card glass-card-mobile rounded-3xl shadow-2xl shadow-mobile p-8 md:p-12 border border-gold/20">

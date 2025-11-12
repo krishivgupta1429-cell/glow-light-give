@@ -342,6 +342,58 @@ All colors MUST be HSL.
     will-change: transform;
   }
   
+  /* ============================================
+     Mobile-Lite Performance Profile
+     Activated at max-width: 768px
+     Goal: Buttery-smooth 60fps scrolling, <50ms tap feedback
+     ============================================ */
+  @media (max-width: 768px) {
+    /* Static glow effects (no blur) for mobile */
+    .mobile-glow-static {
+      filter: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    
+    /* Remove backdrop-filter on mobile (already handled by glass-card-mobile, but ensure all are removed) */
+    .backdrop-blur-sm,
+    .backdrop-blur-md,
+    .backdrop-blur-lg,
+    .backdrop-blur-xl,
+    .backdrop-blur-2xl,
+    .backdrop-blur-3xl {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    
+    /* Reduce blur filters - replace heavy blurs with lighter ones or remove */
+    .blur-sm { filter: blur(2px) !important; }
+    .blur-md { filter: blur(4px) !important; }
+    .blur-lg { filter: blur(6px) !important; }
+    .blur-xl { filter: blur(8px) !important; }
+    .blur-2xl { filter: blur(10px) !important; }
+    .blur-3xl { filter: none !important; } /* Remove heaviest blurs */
+    
+    /* GPU acceleration hints for animations - only transform & opacity */
+    .animate-fade-in,
+    .animate-candle-flicker,
+    .animate-gentle-pulse,
+    .animate-shimmer {
+      will-change: transform, opacity !important;
+      transform: translateZ(0) !important;
+      /* Force GPU layer creation */
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      perspective: 1000px;
+      -webkit-perspective: 1000px;
+    }
+    
+    /* Lock heights to prevent CLS */
+    .hero-section {
+      min-height: 400px;
+    }
+  }
+  
   /* Mobile optimizations */
   @media (max-width: 768px) {
     /* Ensure tap targets are at least 44px */

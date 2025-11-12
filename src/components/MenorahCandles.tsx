@@ -65,12 +65,19 @@ const MenorahCandles = ({ isMobile = false, prefersReducedMotion = false }: Meno
 
   return (
     <div className="relative w-full flex justify-center items-center py-6 pt-12 pb-4">
-      {/* Outer glow layers - seamless blending with background */}
-      <div className={`absolute inset-0 bg-gradient-radial from-amber/20 via-gold/10 to-transparent blur-3xl opacity-40 ${!isMobile && !prefersReducedMotion ? 'animate-gentle-pulse' : ''}`} />
-      <div className="absolute inset-0 bg-gradient-radial from-gold/12 to-transparent blur-2xl opacity-25" />
-      
-      {/* Subtle base lighting effect - soft and refined */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[200px] h-[15px] bg-gradient-to-t from-gold/15 via-amber/8 to-transparent blur-lg opacity-50" />
+      {/* Outer glow layers - seamless blending with background - simplified on mobile */}
+      {isMobile ? (
+        <>
+          <div className="absolute inset-0 bg-gradient-radial from-amber/15 via-gold/8 to-transparent opacity-30 mobile-glow-static" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[200px] h-[15px] bg-gradient-to-t from-gold/12 via-amber/6 to-transparent opacity-40 mobile-glow-static" />
+        </>
+      ) : (
+        <>
+          <div className={`absolute inset-0 bg-gradient-radial from-amber/20 via-gold/10 to-transparent blur-3xl opacity-40 ${!prefersReducedMotion ? 'animate-gentle-pulse' : ''}`} />
+          <div className="absolute inset-0 bg-gradient-radial from-gold/12 to-transparent blur-2xl opacity-25" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[200px] h-[15px] bg-gradient-to-t from-gold/15 via-amber/8 to-transparent blur-lg opacity-50" />
+        </>
+      )}
       
       {/* SVG Menorah - no borders, fully blended */}
       {/* ViewBox shifted down slightly to ensure full flame visibility */}
@@ -79,7 +86,9 @@ const MenorahCandles = ({ isMobile = false, prefersReducedMotion = false }: Meno
         viewBox="-110 -35 220 105"
         className="relative z-10 w-full max-w-[400px] md:max-w-[500px] h-auto"
         style={{ 
-          filter: 'drop-shadow(0 0 25px rgba(255, 215, 0, 0.3))',
+          filter: isMobile ? 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.2))' : 'drop-shadow(0 0 25px rgba(255, 215, 0, 0.3))',
+          transform: 'translateZ(0)', // GPU acceleration
+          willChange: 'transform'
         }}
         preserveAspectRatio="xMidYMid meet"
       >

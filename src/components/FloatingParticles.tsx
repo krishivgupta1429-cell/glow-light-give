@@ -30,10 +30,16 @@ const FloatingParticles = () => {
     }
 
     const particles: Particle[] = [];
-    // Reduce particle count on mobile for performance
+    // Reduce particle count on mobile for performance (60-70% reduction)
     const isMobile = window.innerWidth <= 768;
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const particleCount = (isMobile || prefersReducedMotion) ? 6 : 80;
+    // Desktop: 80, Mobile: 24-32 (70% reduction)
+    const particleCount = (isMobile || prefersReducedMotion) ? 24 : 80;
+    
+    // Frame rate limiting for mobile (30fps = ~33ms per frame)
+    const targetFPS = isMobile ? 30 : 60;
+    const frameInterval = 1000 / targetFPS;
+    let lastFrameTime = 0;
 
     // Gold color variations
     const goldColors = [
@@ -62,7 +68,36 @@ const FloatingParticles = () => {
       });
     }
 
-    const animate = () => {
+    // Use Page Visibility API to pause when tab is hidden
+    let animationFrameId: number;
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Pause animation when tab is hidden
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
+      } else {
+        // Resume animation when tab is visible
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
+
+    const animate = (currentTime: number) => {
+      // Skip if page is hidden
+      if (document.hidden) {
+        return;
+      }
+      
+      // Frame rate limiting for mobile
+      if (isMobile && currentTime - lastFrameTime < frameInterval) {
+        animationFrameId = requestAnimationFrame(animate);
+        return;
+      }
+      lastFrameTime = currentTime;
+
       // Clear with slight fade for trailing effect
       ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -136,10 +171,10 @@ const FloatingParticles = () => {
         }
       });
 
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
     };
 
-    animate();
+    animationFrameId = requestAnimationFrame(animate);
 
     // Debounced resize handler - batch reads/writes with requestAnimationFrame
     let resizeTimeout: NodeJS.Timeout;
@@ -156,8 +191,12 @@ const FloatingParticles = () => {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (resizeTimeout) {
         clearTimeout(resizeTimeout);
+      }
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
       }
     };
   }, []);
@@ -166,7 +205,11 @@ const FloatingParticles = () => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-[1]"
-      style={{ mixBlendMode: 'screen' }}
+      style={{ 
+        mixBlendMode: 'screen',
+        transform: 'translateZ(0)', // GPU acceleration
+        willChange: 'contents'
+      }}
     />
   );
 };

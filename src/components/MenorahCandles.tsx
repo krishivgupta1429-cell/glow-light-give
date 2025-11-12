@@ -8,25 +8,25 @@ interface MenorahCandlesProps {
 const MenorahCandles = ({ isMobile = false, prefersReducedMotion = false }: MenorahCandlesProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Candle positions - Traditional menorah arrangement with arched structure
-  // Four candles on each side descending in height, center shamash elevated
+  // Candle positions - All candles in a perfectly straight horizontal line
+  // Center shamash slightly elevated, all other candles at same height
   // Equal spacing: 22 units between candles
-  // Y positions create the arch: negative Y moves up (shamash), positive Y moves down (outer candles)
+  // Uniform height for all candles (shamash can be slightly taller)
   const candles = [
-    // Left side (4 candles) - descending from center outward, creating smooth arch
-    { x: -88, y: 12, height: 45, side: 'left' },      // Leftmost - lowest position and height
-    { x: -66, y: 8, height: 48, side: 'left' },       // Second from left
-    { x: -44, y: 4, height: 51, side: 'left' },       // Third from left
-    { x: -22, y: 1, height: 53, side: 'left' },      // Closest to center
+    // Left side (4 candles) - all at same Y position and height
+    { x: -88, y: 0, height: 50, side: 'left' },      // Leftmost
+    { x: -66, y: 0, height: 50, side: 'left' },       // Second from left
+    { x: -44, y: 0, height: 50, side: 'left' },       // Third from left
+    { x: -22, y: 0, height: 50, side: 'left' },      // Closest to center
     
-    // Center shamash - elevated above all others, but lowered slightly to show full flame
-    { x: 0, y: -7, height: 62, isShamash: true },      // Center (shamash) - lowered by 5 units to show full flame
+    // Center shamash - slightly elevated above others
+    { x: 0, y: -5, height: 52, isShamash: true },      // Center (shamash) - elevated
     
-    // Right side (4 candles) - descending from center outward, creating smooth arch
-    { x: 22, y: 1, height: 53, side: 'right' },       // Closest to center
-    { x: 44, y: 4, height: 51, side: 'right' },       // Third from right
-    { x: 66, y: 8, height: 48, side: 'right' },       // Second from right
-    { x: 88, y: 12, height: 45, side: 'right' },       // Rightmost - lowest position and height
+    // Right side (4 candles) - all at same Y position and height
+    { x: 22, y: 0, height: 50, side: 'right' },       // Closest to center
+    { x: 44, y: 0, height: 50, side: 'right' },       // Third from right
+    { x: 66, y: 0, height: 50, side: 'right' },       // Second from right
+    { x: 88, y: 0, height: 50, side: 'right' },       // Rightmost
   ];
 
   useEffect(() => {
@@ -93,18 +93,18 @@ const MenorahCandles = ({ isMobile = false, prefersReducedMotion = false }: Meno
             </feMerge>
           </filter>
           
-          {/* Radial gradients for flames - warm yellow-orange tones */}
+          {/* Radial gradients for flames - pure yellow tones */}
           <radialGradient id="flameGradient" cx="50%" cy="20%" r="100%">
-            <stop offset="0%" stopColor="#FFE082" stopOpacity="1" />
-            <stop offset="30%" stopColor="#FFB74D" stopOpacity="0.95" />
-            <stop offset="60%" stopColor="#FF9800" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#FF6F00" stopOpacity="0" />
+            <stop offset="0%" stopColor="#FFEB3B" stopOpacity="1" />
+            <stop offset="30%" stopColor="#FFD54F" stopOpacity="0.95" />
+            <stop offset="60%" stopColor="#FFC107" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#FFD54F" stopOpacity="0" />
           </radialGradient>
           
           <radialGradient id="flameCore" cx="50%" cy="15%" r="70%">
-            <stop offset="0%" stopColor="#FFF9C4" stopOpacity="1" />
-            <stop offset="50%" stopColor="#FFE082" stopOpacity="1" />
-            <stop offset="100%" stopColor="#FFB74D" stopOpacity="0.6" />
+            <stop offset="0%" stopColor="#FFFDE7" stopOpacity="1" />
+            <stop offset="50%" stopColor="#FFEB3B" stopOpacity="1" />
+            <stop offset="100%" stopColor="#FFD54F" stopOpacity="0.6" />
           </radialGradient>
           
           {/* White candle body gradient - clean and elegant */}
@@ -183,7 +183,7 @@ const MenorahCandles = ({ isMobile = false, prefersReducedMotion = false }: Meno
                 cy={candleTopY - 6}
                 rx="8"
                 ry={flameHaloHeight - 2}
-                fill="rgba(255, 184, 77, 0.15)"
+                fill="rgba(255, 213, 79, 0.15)"
                 className={!isMobile && !prefersReducedMotion ? 'animate-gentle-pulse' : ''}
                 style={{
                   animationDelay: !isMobile && !prefersReducedMotion ? `${index * 0.15}s` : '0s',
@@ -228,7 +228,7 @@ const MenorahCandles = ({ isMobile = false, prefersReducedMotion = false }: Meno
                 cx="0"
                 cy={candleTopY - 6}
                 r="5"
-                fill="rgba(255, 184, 77, 0.08)"
+                fill="rgba(255, 213, 79, 0.08)"
                 className={!isMobile && !prefersReducedMotion ? 'animate-gentle-pulse' : ''}
                 style={{
                   animationDelay: !isMobile && !prefersReducedMotion ? `${index * 0.12}s` : '0s',

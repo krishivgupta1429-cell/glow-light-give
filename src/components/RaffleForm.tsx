@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,20 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 
 const RaffleForm = () => {
-  const sponsorshipSectionRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     phone: "",
     reason: "",
     otherReason: "",
-    showSponsorships: false,
     sponsorships: [] as string[],
     cansQuantity: "",
     comments: "",
@@ -222,110 +217,18 @@ const RaffleForm = () => {
 
         {/* Support */}
         <div className="space-y-4">
-          {/* Intro line and CTA */}
-          <div className="space-y-6">
-            <p className="text-foreground font-medium text-base text-left">
-              This free community event is made possible by generous donors like you. Please consider supporting and being part of this beautiful celebration.
-            </p>
-            <div className="flex flex-col items-center space-y-2">
-              <Button
-                type="button"
-                ref={buttonRef}
-                onClick={() => {
-                  if (formData.showSponsorships) {
-                    // Collapse: clear sponsorships and return focus to button
-                    setFormData({ ...formData, showSponsorships: false, sponsorships: [] });
-                    // Return focus to button after state update
-                    setTimeout(() => {
-                      buttonRef.current?.focus();
-                    }, 0);
-                  } else {
-                    // Expand: show sponsorships and smooth scroll
-                    setFormData({ ...formData, showSponsorships: true });
-                    // Smooth scroll to sponsorship section after it renders
-                    // Disable on mobile for performance
-                    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                    const isMobile = window.innerWidth <= 768;
-                    if (!isMobile) {
-                      setTimeout(() => {
-                        if (sponsorshipSectionRef.current) {
-                          const firstCheckbox = sponsorshipSectionRef.current.querySelector('[id^="sponsorship-"]');
-                          if (firstCheckbox) {
-                            firstCheckbox.scrollIntoView({ 
-                              behavior: prefersReducedMotion ? 'auto' : 'smooth', 
-                              block: 'start' 
-                            });
-                          } else {
-                            sponsorshipSectionRef.current.scrollIntoView({ 
-                              behavior: prefersReducedMotion ? 'auto' : 'smooth', 
-                              block: 'start' 
-                            });
-                          }
-                        }
-                      }, 100);
-                    }
-                  }
-                }}
-                aria-expanded={formData.showSponsorships}
-                aria-controls="sponsorship-section"
-                className="px-6 py-2.5 rounded-full font-medium transition-all duration-300 whitespace-nowrap flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-gold group"
-                onMouseEnter={(e) => {
-                  if (window.innerWidth > 768) {
-                    e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 213, 79, 0.5)';
-                    e.currentTarget.style.opacity = '0.95';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (window.innerWidth > 768) {
-                    e.currentTarget.style.boxShadow = '';
-                    e.currentTarget.style.opacity = '1';
-                  }
-                }}
-                onFocus={(e) => {
-                  if (window.innerWidth > 768) {
-                    e.currentTarget.style.opacity = '0.95';
-                  }
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.opacity = '1';
-                }}
-                style={{
-                  backgroundColor: '#FFD54F',
-                  color: '#1A0D00',
-                  border: 'none',
-                }}
-              >
-                <span>{formData.showSponsorships ? "Hide Support Options" : "Yes, I'd like to support"}</span>
-                {formData.showSponsorships ? (
-                  <ChevronUp className="h-4 w-4" aria-hidden="true" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                )}
-              </Button>
-              {!formData.showSponsorships && (
-                <p className="text-xs text-foreground/60 text-center flex items-center justify-center gap-1.5">
-                  <span>View sponsorship levels</span>
-                  <ChevronDown 
-                    className="h-3 w-3" 
-                    aria-hidden="true" 
-                    style={{ 
-                      animation: 'bounce-slow-delayed 4s ease-in-out infinite',
-                    }} 
-                  />
-                </p>
-              )}
-            </div>
-          </div>
+          {/* Intro line */}
+          <p className="text-foreground font-medium text-base text-left">
+            This free community event is made possible by generous donors like you. Please consider supporting and being part of this beautiful celebration — your contribution will also make you a part of the Lamplighter Wall.
+          </p>
           
-          {/* Conditional Sponsorship Section */}
-          {formData.showSponsorships && (
-            <div 
-              id="sponsorship-section" 
-              ref={sponsorshipSectionRef}
-              className="space-y-4 mt-4 pt-4 border-t border-gold/20 animate-fade-in content-offscreen" 
-              role="region" 
-              aria-labelledby="sponsorship-label"
-            >
+          {/* Sponsorship Section */}
+          <div 
+            id="sponsorship-section" 
+            className="space-y-4 mt-4 pt-4 border-t border-gold/20 content-offscreen" 
+            role="region" 
+            aria-labelledby="sponsorship-label"
+          >
               {/* Label and Checkboxes Layout */}
               <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6 sponsorship-container">
                 {/* Left Label */}
@@ -378,39 +281,34 @@ const RaffleForm = () => {
                 </span>
               </div>
               
-              {/* Lamplighter Wall Acknowledgement */}
-              <div className="space-y-3 pt-4 mt-4 border-t border-gold/20">
-                <p className="text-xs text-foreground/60 text-center">
-                  Thank you for your generous support — you're now eligible to be recognized on the Lamplighter Wall.
-                </p>
-                <div className="flex justify-center">
-                  <button
-                    type="button"
-                    aria-disabled="true"
-                    className="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold/20 via-amber/15 to-gold/20 border border-gold/40 text-gold font-medium cursor-not-allowed opacity-75 hover:opacity-90 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] transition-all duration-200 active:scale-95 relative overflow-hidden"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      // Visual feedback only - no action
-                      const button = e.currentTarget;
-                      const rect = button.getBoundingClientRect();
-                      const ripple = document.createElement('span');
-                      const size = Math.max(rect.width, rect.height);
-                      const x = e.clientX - rect.left - size / 2;
-                      const y = e.clientY - rect.top - size / 2;
-                      
-                      ripple.style.width = ripple.style.height = `${size}px`;
-                      ripple.style.left = `${x}px`;
-                      ripple.style.top = `${y}px`;
-                      ripple.className = 'absolute rounded-full bg-gold/20 pointer-events-none animate-ping';
-                      ripple.style.animationDuration = '0.6s';
-                      
-                      button.appendChild(ripple);
-                      setTimeout(() => ripple.remove(), 600);
-                    }}
-                  >
-                    <span className="relative z-10">Join the Lamplighter Wall</span>
-                  </button>
-                </div>
+              {/* Lamplighter Wall Button */}
+              <div className="flex justify-center pt-4 mt-4 border-t border-gold/20">
+                <button
+                  type="button"
+                  aria-disabled="true"
+                  className="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold/20 via-amber/15 to-gold/20 border border-gold/40 text-gold font-medium cursor-not-allowed opacity-75 hover:opacity-90 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] transition-all duration-200 active:scale-95 relative overflow-hidden"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Visual feedback only - no action
+                    const button = e.currentTarget;
+                    const rect = button.getBoundingClientRect();
+                    const ripple = document.createElement('span');
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.width = ripple.style.height = `${size}px`;
+                    ripple.style.left = `${x}px`;
+                    ripple.style.top = `${y}px`;
+                    ripple.className = 'absolute rounded-full bg-gold/20 pointer-events-none animate-ping';
+                    ripple.style.animationDuration = '0.6s';
+                    
+                    button.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 600);
+                  }}
+                >
+                  <span className="relative z-10">View the Lamplighter Wall</span>
+                </button>
               </div>
               
               {/* Hidden inputs for form submission */}
@@ -428,7 +326,6 @@ const RaffleForm = () => {
                 value={sponsorshipTotal.toFixed(2)}
               />
             </div>
-          )}
         </div>
 
         {/* Separator */}

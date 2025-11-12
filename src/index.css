@@ -216,6 +216,11 @@ All colors MUST be HSL.
     will-change: opacity;
   }
   
+  .golden-flame-icon {
+    color: #ffd766;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 102, 0.45));
+  }
+  
   /* Ripple effect for buttons */
   @keyframes ripple {
     0% {

@@ -4,6 +4,34 @@ import RaffleForm from "@/components/RaffleForm";
 import MenorahCandles from "@/components/MenorahCandles";
 import { usePerformanceLogger } from "@/hooks/use-performance-logger";
 
+const GoldenFlameIcon = ({ className = "" }: { className?: string }) => (
+  <span className="inline-flex items-center justify-center">
+    <svg
+      className={`golden-flame-icon ${className}`}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 21c-3.55 0-6.5-2.86-6.5-6.22 0-2.44 1.32-4.04 2.82-5.63 1.25-1.31 2.41-2.7 2.41-4.47 1.73 1.43 3.3 3.45 3.66 5.45 1.57.93 3.11 2.61 3.11 4.94C17.5 18.14 15.08 21 12 21Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12 17.5c-1.6 0-2.9-1.26-2.9-2.86 0-1.02.54-1.93 1.34-2.68.63-.6 1.2-1.29 1.2-2.27 1.34.97 2.3 2.44 2.3 3.92 0 1.62-1.28 2.89-2.94 2.89Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  </span>
+);
+
 const Index = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -96,9 +124,9 @@ const Index = () => {
         {/* Hosted by banner */}
         <div className="text-center mb-6 animate-fade-in">
           <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-gradient-to-r from-gold/10 via-amber/10 to-gold/10 border border-gold/30 backdrop-blur-sm">
-            <span className="text-amber-400 text-lg">🔥</span>
+            <GoldenFlameIcon className="w-5 h-5 md:w-6 md:h-6" />
             <span className="text-sm font-medium text-foreground/90 tracking-wider">HOSTED BY CHABAD TRAVERSE CITY</span>
-            <span className="text-amber-400 text-lg">🔥</span>
+            <GoldenFlameIcon className="w-5 h-5 md:w-6 md:h-6" />
           </div>
         </div>
 

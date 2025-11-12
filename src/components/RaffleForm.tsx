@@ -454,7 +454,7 @@ const RaffleForm = () => {
               onCheckedChange={(checked) =>
                 setFormData({ ...formData, emailUpdatesOptIn: checked as boolean })
               }
-              className="mt-1 border-gold/60 data-[state=checked]:bg-gold data-[state=checked]:border-gold ring-offset-background focus-visible:ring-2 focus-visible:ring-gold/40 transition-all duration-200"
+              className="mt-1 border-gold/60 data-[state=checked]:bg-gold data-[state=checked]:border-gold ring-offset-background focus-visible:ring-2 focus-visible:ring-gold/40 transition-all duration-200 email-updates-checkbox"
             />
               <Label
               htmlFor="emailUpdatesOptIn"

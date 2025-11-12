@@ -396,6 +396,15 @@ All colors MUST be HSL.
   
   /* Mobile optimizations */
   @media (max-width: 768px) {
+    /* Email updates checkbox - slightly smaller for better balance */
+    .email-updates-checkbox {
+      width: 18px !important;
+      height: 18px !important;
+      min-width: 18px !important;
+      min-height: 18px !important;
+      margin-top: 0.35rem !important; /* keep vertical alignment with label */
+    }
+    
     /* Ensure tap targets are at least 44px */
     button, 
     [role="button"],

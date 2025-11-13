@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import FloatingParticles from "@/components/FloatingParticles";
-import { RaffleFormWrapper } from "@/components/RaffleFormWrapper";
+import RaffleForm from "@/components/RaffleForm";
 import MenorahCandles from "@/components/MenorahCandles";
 import { usePerformanceLogger } from "@/hooks/use-performance-logger";
 
@@ -173,7 +173,7 @@ const Index = () => {
             </div>
 
             <div className="relative z-10">
-              <RaffleFormWrapper />
+              <RaffleForm />
             </div>
           </div>
         </div>

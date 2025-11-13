@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,37 +18,65 @@ const SPONSORSHIP_AMOUNTS: Record<string, number> = {
   'MENORAH_GOLD': 54000,    // $540
 };
 
+// Input validation schema
+const FormDataSchema = z.object({
+  fullName: z.string().min(1).max(100),
+  email: z.string().email().max(255),
+  areaCode: z.string().regex(/^\d{3}$/).optional(),
+  phoneNumber: z.string().regex(/^\d{7}$/).optional(),
+});
+
+// Rate limiting store (in-memory, resets on function restart)
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string, limit: number, windowSeconds: number): boolean {
+  const now = Date.now();
+  const key = `payment:${ip}`;
+  const record = rateLimitStore.get(key);
+
+  if (!record || record.resetAt < now) {
+    rateLimitStore.set(key, { count: 1, resetAt: now + windowSeconds * 1000 });
+    return true;
+  }
+
+  if (record.count >= limit) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { sponsorshipLevel, formData, amount } = await req.json();
-
-    console.log('[CREATE-PAYMENT-INTENT] Request received', { sponsorshipLevel, amount });
-
-    // Use provided amount if available, otherwise use sponsorship level mapping
-    let amountCents: number;
-    if (amount) {
-      amountCents = Math.round(amount); // Ensure it's an integer
-    } else if (sponsorshipLevel) {
-      amountCents = SPONSORSHIP_AMOUNTS[sponsorshipLevel];
-      if (!amountCents) {
-        throw new Error(`Invalid sponsorship level: ${sponsorshipLevel}`);
-      }
-    } else {
-      throw new Error('Either amount or sponsorshipLevel must be provided');
+    // Rate limiting
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    if (!checkRateLimit(ip, 10, 60)) {
+      console.warn('[CREATE-PAYMENT-INTENT] Rate limit exceeded', { ip });
+      return new Response(
+        JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 429 
+        }
+      );
     }
 
-    // Validate amount is positive
-    if (amountCents <= 0) {
-      throw new Error('Amount must be greater than zero');
-    }
+    const { sponsorshipLevel, formData } = await req.json();
 
-    // Validate required fields
-    if (!formData?.fullName || !formData?.email) {
-      throw new Error('Missing required fields: fullName and email');
+    console.log('[CREATE-PAYMENT-INTENT] Request received', { sponsorshipLevel });
+
+    // Validate input
+    const validatedData = FormDataSchema.parse(formData);
+
+    // ONLY use server-side mapping - never trust client amount
+    const amountCents = SPONSORSHIP_AMOUNTS[sponsorshipLevel];
+    if (!amountCents) {
+      throw new Error(`Invalid sponsorship level: ${sponsorshipLevel}`);
     }
 
     // Initialize Stripe
@@ -70,10 +99,11 @@ serve(async (req) => {
       metadata: {
         submission_id: submissionId,
         sponsorship_level: sponsorshipLevel,
-        customer_name: formData.fullName,
-        customer_email: formData.email,
+        expected_amount: amountCents.toString(),
+        customer_name: validatedData.fullName,
+        customer_email: validatedData.email,
       },
-      description: `${sponsorshipLevel} Sponsorship - ${formData.fullName}`,
+      description: `${sponsorshipLevel} Sponsorship - ${validatedData.fullName}`,
     });
 
     console.log('[CREATE-PAYMENT-INTENT] PaymentIntent created', { 

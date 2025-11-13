@@ -9,12 +9,12 @@ const corsHeaders = {
 
 // Sponsorship level to amount mapping (in cents)
 const SPONSORSHIP_AMOUNTS: Record<string, number> = {
-  'DOUGHNUT_BRONZE': 1800,  // $18
-  'DOUGHNUT_SILVER': 3600,  // $36
-  'DOUGHNUT_GOLD': 7200,    // $72
+  'DOUGHNUT_BRONZE': 3600,  // $36
+  'DOUGHNUT_SILVER': 7200,  // $72
+  'DOUGHNUT_GOLD': 10800,   // $108
   'MENORAH_BRONZE': 18000,  // $180
   'MENORAH_SILVER': 36000,  // $360
-  'MENORAH_GOLD': 72000,    // $720
+  'MENORAH_GOLD': 54000,    // $540
 };
 
 serve(async (req) => {
@@ -23,14 +23,26 @@ serve(async (req) => {
   }
 
   try {
-    const { sponsorshipLevel, formData } = await req.json();
+    const { sponsorshipLevel, formData, amount } = await req.json();
 
-    console.log('[CREATE-PAYMENT-INTENT] Request received', { sponsorshipLevel });
+    console.log('[CREATE-PAYMENT-INTENT] Request received', { sponsorshipLevel, amount });
 
-    // Validate sponsorship level
-    const amountCents = SPONSORSHIP_AMOUNTS[sponsorshipLevel];
-    if (!amountCents) {
-      throw new Error(`Invalid sponsorship level: ${sponsorshipLevel}`);
+    // Use provided amount if available, otherwise use sponsorship level mapping
+    let amountCents: number;
+    if (amount) {
+      amountCents = Math.round(amount); // Ensure it's an integer
+    } else if (sponsorshipLevel) {
+      amountCents = SPONSORSHIP_AMOUNTS[sponsorshipLevel];
+      if (!amountCents) {
+        throw new Error(`Invalid sponsorship level: ${sponsorshipLevel}`);
+      }
+    } else {
+      throw new Error('Either amount or sponsorshipLevel must be provided');
+    }
+
+    // Validate amount is positive
+    if (amountCents <= 0) {
+      throw new Error('Amount must be greater than zero');
     }
 
     // Validate required fields
@@ -83,8 +95,9 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('[CREATE-PAYMENT-INTENT] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400 

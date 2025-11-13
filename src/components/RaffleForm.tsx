@@ -168,11 +168,11 @@ const RaffleForm = () => {
     // For now, take the first sponsorship (can be enhanced for multiple)
     const mapping: Record<string, string> = {
       'doughnut': 'DOUGHNUT_BRONZE',
-      'doughnut-gold': 'DOUGHNUT_GOLD',
-      'doughnut-platinum': 'DOUGHNUT_SILVER',
+      'doughnut-gold': 'DOUGHNUT_SILVER',
+      'doughnut-platinum': 'DOUGHNUT_GOLD',
       'menorah': 'MENORAH_BRONZE',
-      'menorah-gold': 'MENORAH_GOLD',
-      'menorah-platinum': 'MENORAH_SILVER',
+      'menorah-gold': 'MENORAH_SILVER',
+      'menorah-platinum': 'MENORAH_GOLD',
     };
     return mapping[formData.sponsorships[0]] || null;
   };
@@ -244,6 +244,7 @@ const RaffleForm = () => {
           'create-payment-intent',
           {
             body: {
+              amount: totalAmount * 100, // Convert dollars to cents
               sponsorshipLevel,
               formData: {
                 fullName: formData.fullName,
@@ -270,6 +271,7 @@ const RaffleForm = () => {
               billing_details: {
                 name: formData.fullName,
                 email: formData.email,
+                phone: `${formData.areaCode}${formData.phoneNumber}`,
               },
             },
           }

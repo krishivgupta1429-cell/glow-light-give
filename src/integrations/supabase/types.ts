@@ -14,60 +14,128 @@ export type Database = {
   }
   public: {
     Tables: {
-      menorah_entries: {
+      donations: {
         Row: {
-          id: string
+          amount_cents: number
+          cans_amount_cents: number | null
           created_at: string
-          full_name: string
-          email: string
-          phone: string | null
-          enjoy_reason: string
-          other_enjoy_reason: string | null
+          form_submission_id: string
+          id: string
           sponsorship_level: string | null
-          sponsorship_amount_usd: number
-          cans_option: string | null
-          cans_amount_usd: number
-          total_amount_usd: number
-          comments: string | null
-          wants_email_updates: boolean
-          lamplighter_eligible: boolean
-          raw_form_json: Json | null
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
         }
         Insert: {
-          id?: string
+          amount_cents: number
+          cans_amount_cents?: number | null
           created_at?: string
-          full_name: string
-          email: string
-          phone?: string | null
-          enjoy_reason: string
-          other_enjoy_reason?: string | null
+          form_submission_id: string
+          id?: string
           sponsorship_level?: string | null
-          sponsorship_amount_usd?: number
-          cans_option?: string | null
-          cans_amount_usd?: number
-          total_amount_usd?: number
-          comments?: string | null
-          wants_email_updates?: boolean
-          lamplighter_eligible?: boolean
-          raw_form_json?: Json | null
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
         }
         Update: {
-          id?: string
+          amount_cents?: number
+          cans_amount_cents?: number | null
           created_at?: string
-          full_name?: string
-          email?: string
-          phone?: string | null
-          enjoy_reason?: string
-          other_enjoy_reason?: string | null
+          form_submission_id?: string
+          id?: string
           sponsorship_level?: string | null
-          sponsorship_amount_usd?: number
-          cans_option?: string | null
-          cans_amount_usd?: number
-          total_amount_usd?: number
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_form_submission_id_fkey"
+            columns: ["form_submission_id"]
+            isOneToOne: false
+            referencedRelation: "form_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      form_submissions: {
+        Row: {
+          cans_quantity: number | null
+          comments: string | null
+          created_at: string
+          email: string
+          email_updates_opt_in: boolean | null
+          email_verified: boolean | null
+          email_verified_at: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          reason: string | null
+          reason_other: string | null
+          sponsorships: string[] | null
+          verification_sent_at: string | null
+          verification_token: string | null
+          wants_to_donate: boolean | null
+        }
+        Insert: {
+          cans_quantity?: number | null
           comments?: string | null
-          wants_email_updates?: boolean
-          lamplighter_eligible?: boolean
-          raw_form_json?: Json | null
+          created_at?: string
+          email: string
+          email_updates_opt_in?: boolean | null
+          email_verified?: boolean | null
+          email_verified_at?: string | null
+          full_name: string
+          id?: string
+          phone?: string | null
+          reason?: string | null
+          reason_other?: string | null
+          sponsorships?: string[] | null
+          verification_sent_at?: string | null
+          verification_token?: string | null
+          wants_to_donate?: boolean | null
+        }
+        Update: {
+          cans_quantity?: number | null
+          comments?: string | null
+          created_at?: string
+          email?: string
+          email_updates_opt_in?: boolean | null
+          email_verified?: boolean | null
+          email_verified_at?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          reason?: string | null
+          reason_other?: string | null
+          sponsorships?: string[] | null
+          verification_sent_at?: string | null
+          verification_token?: string | null
+          wants_to_donate?: boolean | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -76,10 +144,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -206,6 +280,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

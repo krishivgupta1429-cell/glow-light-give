@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { submitEntry } from "@/lib/submitEntry";
+import { validateEmail } from "@/lib/emailValidation";
 
 const RaffleForm = () => {
   const [formData, setFormData] = useState({
@@ -28,6 +29,7 @@ const RaffleForm = () => {
     emailUpdatesOptIn: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailError, setEmailError] = useState<string>("");
 
   // Can options with quantities and amounts
   const canOptions = [
@@ -83,8 +85,34 @@ const RaffleForm = () => {
     }
   };
 
+  // Handle email validation
+  const handleEmailChange = (email: string) => {
+    setFormData({ ...formData, email });
+    
+    if (email.trim()) {
+      const validation = validateEmail(email);
+      if (!validation.valid) {
+        setEmailError(validation.error || "");
+      } else {
+        setEmailError("");
+      }
+    } else {
+      setEmailError("");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate email before submission
+    const emailValidation = validateEmail(formData.email);
+    if (!emailValidation.valid) {
+      setEmailError(emailValidation.error || "Invalid email");
+      toast.error("Invalid Email", {
+        description: emailValidation.error,
+      });
+      return;
+    }
 
     // Validate otherReason if "other" is selected
     if (formData.reason === "other" && !formData.otherReason.trim()) {
@@ -112,9 +140,16 @@ const RaffleForm = () => {
       });
 
       if (response.success) {
-        toast.success("Success! ✨", {
-          description: "Thank you for being part of our community celebration.",
-        });
+        if (response.needsVerification) {
+          toast.success("Registration Submitted!", {
+            description: "Please check your email to verify your address. You'll need to verify before completing your donation.",
+            duration: 8000,
+          });
+        } else {
+          toast.success("Success! ✨", {
+            description: "Thank you for being part of our community celebration.",
+          });
+        }
 
         // Reset form
         setFormData({
@@ -128,6 +163,7 @@ const RaffleForm = () => {
           comments: "",
           emailUpdatesOptIn: false,
         });
+        setEmailError("");
       } else {
         toast.error("Submission failed", {
           description: response.error || "Please try again.",
@@ -171,10 +207,15 @@ const RaffleForm = () => {
             type="email"
             placeholder="your.email@example.com"
             value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onChange={(e) => handleEmailChange(e.target.value)}
             required
-            className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)]"
+            className={`bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] ${
+              emailError ? "border-red-500 focus:border-red-500 focus:ring-red-500/40" : ""
+            }`}
           />
+          {emailError && (
+            <p className="text-sm text-red-500 mt-1">{emailError}</p>
+          )}
         </div>
 
         {/* Phone */}

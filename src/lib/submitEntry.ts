@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { validateEmail } from "./emailValidation";
 
 export interface MenorahEntryData {
   fullName: string;
@@ -16,10 +17,20 @@ export interface MenorahEntryResponse {
   success: boolean;
   entryId?: string;
   error?: string;
+  needsVerification?: boolean;
 }
 
 /**
- * Submits a menorah entry to the Lovable Cloud database
+ * Generates a secure random verification token
+ */
+function generateVerificationToken(): string {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Submits a form entry to the database
  * @param formData - The form data from the RaffleForm component
  * @returns Promise with success status and entry ID or error message
  */
@@ -42,12 +53,12 @@ export async function submitEntry(
       };
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
+    // Enhanced email validation with disposable domain checking
+    const emailValidation = validateEmail(formData.email);
+    if (!emailValidation.valid) {
       return {
         success: false,
-        error: "Please enter a valid email address",
+        error: emailValidation.error,
       };
     }
 
@@ -79,16 +90,7 @@ export async function submitEntry(
       { id: "menorah-platinum", label: "MENORAH PLATINUM SPONSOR", amount: 540 },
     ];
 
-    const sponsorshipAmountUsd = formData.sponsorships.reduce((total, sponsorshipId) => {
-      const option = sponsorshipOptions.find((opt) => opt.id === sponsorshipId);
-      return total + (option?.amount || 0);
-    }, 0);
-
-    // Get sponsorship level labels
-    const sponsorshipLevel = formData.sponsorships
-      .map((id) => sponsorshipOptions.find((opt) => opt.id === id)?.label)
-      .filter(Boolean)
-      .join(", ");
+    const wantsToDonate = formData.sponsorships.length > 0 || formData.cansQuantity !== "";
 
     // Calculate cans amount
     const canOptions = [
@@ -109,53 +111,66 @@ export async function submitEntry(
     const selectedCanOption = canOptions.find(
       (option) => option.label === formData.cansQuantity
     );
-    const cansAmountUsd = selectedCanOption?.amount || 0;
+    const cansQuantityValue = selectedCanOption?.quantity || 0;
 
-    // Calculate total
-    const totalAmountUsd = sponsorshipAmountUsd + cansAmountUsd;
-
-    // Determine lamplighter eligibility (donations > 0)
-    const lamplighterEligible = totalAmountUsd > 0;
+    // Generate verification token
+    const verificationToken = generateVerificationToken();
 
     // Prepare the database entry
     const entry = {
       full_name: formData.fullName.trim(),
       email: formData.email.trim().toLowerCase(),
       phone: formData.phone?.trim() || null,
-      enjoy_reason: formData.enjoyReason,
-      other_enjoy_reason: formData.otherEnjoyReason?.trim() || null,
-      sponsorship_level: sponsorshipLevel || null,
-      sponsorship_amount_usd: sponsorshipAmountUsd,
-      cans_option: formData.cansQuantity || null,
-      cans_amount_usd: cansAmountUsd,
-      total_amount_usd: totalAmountUsd,
+      reason: formData.enjoyReason,
+      reason_other: formData.otherEnjoyReason?.trim() || null,
+      sponsorships: formData.sponsorships,
+      cans_quantity: cansQuantityValue,
       comments: formData.comments?.trim() || null,
-      wants_email_updates: formData.emailUpdatesOptIn,
-      lamplighter_eligible: lamplighterEligible,
-      raw_form_json: formData,
+      email_updates_opt_in: formData.emailUpdatesOptIn,
+      wants_to_donate: wantsToDonate,
+      email_verified: false,
+      verification_token: verificationToken,
+      verification_sent_at: new Date().toISOString(),
     };
 
     // Insert into database
     const { data, error } = await supabase
-      .from("menorah_entries")
+      .from("form_submissions")
       .insert(entry)
       .select("id")
       .single();
 
     if (error) {
-      console.error("Error inserting menorah entry:", error);
+      console.error("Error inserting form submission:", error);
       return {
         success: false,
         error: "Failed to submit your entry. Please try again.",
       };
     }
 
-    // Log success for testing
-    console.log("Created menorah_entries row with id:", data.id);
+    // Send verification email
+    try {
+      const { error: emailError } = await supabase.functions.invoke('send-verification-email', {
+        body: {
+          email: formData.email.trim().toLowerCase(),
+          name: formData.fullName.trim(),
+          token: verificationToken,
+        },
+      });
+
+      if (emailError) {
+        console.error("Error sending verification email:", emailError);
+      }
+    } catch (emailError) {
+      console.error("Error invoking send-verification-email function:", emailError);
+    }
+
+    console.log("Created form_submissions row with id:", data.id);
 
     return {
       success: true,
       entryId: data.id,
+      needsVerification: wantsToDonate,
     };
   } catch (error) {
     console.error("Unexpected error submitting entry:", error);

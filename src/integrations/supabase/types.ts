@@ -73,6 +73,7 @@ export type Database = {
           email_verified_at: string | null
           full_name: string
           id: string
+          is_donor: boolean | null
           phone: string | null
           phone_number: string | null
           reason: string | null
@@ -93,6 +94,7 @@ export type Database = {
           email_verified_at?: string | null
           full_name: string
           id?: string
+          is_donor?: boolean | null
           phone?: string | null
           phone_number?: string | null
           reason?: string | null
@@ -113,6 +115,7 @@ export type Database = {
           email_verified_at?: string | null
           full_name?: string
           id?: string
+          is_donor?: boolean | null
           phone?: string | null
           phone_number?: string | null
           reason?: string | null

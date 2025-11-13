@@ -34,6 +34,17 @@ const RaffleForm = () => {
   const [areaCodeError, setAreaCodeError] = useState<string>("");
   const [phoneNumberError, setPhoneNumberError] = useState<string>("");
 
+  // Phone format mapping for different countries
+  const phoneFormats: Record<string, { placeholder: string; digits: number }> = {
+    '+1': { placeholder: '123-456-7890', digits: 10 },    // US/Canada
+    '+44': { placeholder: '7123 456789', digits: 10 },    // UK
+    '+91': { placeholder: '98765 43210', digits: 10 },    // India
+    '+61': { placeholder: '412 345 678', digits: 9 },     // Australia
+  };
+
+  // Get current format based on area code
+  const currentFormat = phoneFormats[formData.areaCode] || { placeholder: 'Phone number', digits: 15 };
+
   // Can options with quantities and amounts
   const canOptions = [
     { quantity: 1, label: "1 CAN – $4", amount: 4 },
@@ -119,18 +130,21 @@ const RaffleForm = () => {
       } else {
         setAreaCodeError("");
       }
+      
+      // Clear phone number error when area code changes (format may have changed)
+      if (phoneNumberError) {
+        setPhoneNumberError("");
+      }
     }
   };
 
   // Handle phone number validation
   const handlePhoneNumberChange = (value: string) => {
-    // Only allow digits, max 15 characters
-    const phoneNumber = value.replace(/\D/g, '').slice(0, 15);
-    setFormData({ ...formData, phoneNumber });
-    
-    if (phoneNumber && phoneNumber.length < 7) {
-      setPhoneNumberError("Phone number must be at least 7 digits");
-    } else {
+    // Strip all non-digit characters
+    const digitsOnly = value.replace(/\D/g, '');
+    // Enforce max length based on current format
+    if (digitsOnly.length <= currentFormat.digits) {
+      setFormData({ ...formData, phoneNumber: digitsOnly });
       setPhoneNumberError("");
     }
   };
@@ -145,6 +159,59 @@ const RaffleForm = () => {
       toast.error("Invalid Email", {
         description: emailValidation.error,
       });
+      return;
+    }
+
+    // Validate area code
+    if (formData.areaCode && !/^\+\d{1,3}$/.test(formData.areaCode)) {
+      setAreaCodeError("Area code must start with + and contain only digits");
+      toast.error("Invalid Area Code", {
+        description: "Please enter a valid area code (e.g., +1, +91)",
+      });
+      return;
+    }
+
+    // Validate phone number based on area code format
+    if (formData.phoneNumber) {
+      const minDigits = 6;
+      const maxDigits = currentFormat.digits;
+      
+      if (formData.phoneNumber.length < minDigits) {
+        setPhoneNumberError(`Phone number must be at least ${minDigits} digits`);
+        toast.error("Invalid Phone Number", {
+          description: `Phone number must be at least ${minDigits} digits`,
+        });
+        return;
+      } else if (formData.phoneNumber.length > maxDigits) {
+        setPhoneNumberError(`Phone number must not exceed ${maxDigits} digits for this area code`);
+        toast.error("Invalid Phone Number", {
+          description: `Phone number must not exceed ${maxDigits} digits for this area code`,
+        });
+        return;
+      } else if (!/^\d+$/.test(formData.phoneNumber)) {
+        setPhoneNumberError("Phone number must contain only digits");
+        toast.error("Invalid Phone Number", {
+          description: "Phone number must contain only digits",
+        });
+        return;
+      }
+    }
+
+    // If both area code and phone number are provided together or both empty, that's ok
+    // But if only one is provided, show error
+    if ((formData.areaCode && !formData.phoneNumber) || (!formData.areaCode && formData.phoneNumber)) {
+      if (!formData.phoneNumber) {
+        setPhoneNumberError("Please enter a phone number");
+        toast.error("Incomplete Phone Number", {
+          description: "Please enter both area code and phone number",
+        });
+      }
+      if (!formData.areaCode) {
+        setAreaCodeError("Please enter an area code");
+        toast.error("Incomplete Phone Number", {
+          description: "Please enter both area code and phone number",
+        });
+      }
       return;
     }
 
@@ -291,11 +358,13 @@ const RaffleForm = () => {
               <Input
                 id="phoneNumber"
                 type="tel"
-                placeholder="9876543210"
+                placeholder={currentFormat.placeholder}
                 value={formData.phoneNumber}
                 onChange={(e) => handlePhoneNumberChange(e.target.value)}
                 required
-                maxLength={15}
+                maxLength={currentFormat.digits}
+                inputMode="numeric"
+                pattern="\d*"
                 className={`bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] ${
                   phoneNumberError ? "border-red-500 focus:border-red-500 focus:ring-red-500/40" : ""
                 }`}

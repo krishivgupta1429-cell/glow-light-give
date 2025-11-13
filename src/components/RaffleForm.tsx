@@ -247,7 +247,7 @@ const RaffleForm = () => {
         }
 
         // Confirm payment
-        const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
+        const result = await stripe.confirmCardPayment(
           paymentData.clientSecret,
           {
             payment_method: {
@@ -260,6 +260,8 @@ const RaffleForm = () => {
             },
           }
         );
+        
+        const { error: confirmError, paymentIntent } = result;
 
         if (confirmError) {
           toast.error("Payment Failed", {

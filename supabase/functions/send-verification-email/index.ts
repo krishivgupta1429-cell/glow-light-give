@@ -26,9 +26,9 @@ serve(async (req) => {
 
     const verificationUrl = `${req.headers.get("origin") || "https://light-the-way-glow.lovable.app"}/verify-email?token=${token}`;
 
-    // For now, log the verification URL (in production, integrate with email service)
+    // Log minimal information (token ID only, not the full URL)
     console.log("Verification email requested for:", email);
-    console.log("Verification URL:", verificationUrl);
+    console.log("Token ID (first 8 chars):", token.substring(0, 8) + "...");
     console.log("Name:", name);
 
     // TODO: Integrate with email service provider (e.g., Resend, SendGrid)
@@ -51,12 +51,15 @@ serve(async (req) => {
     //   `,
     // });
 
+    // Only return verification URL in development environment
+    const isDevelopment = Deno.env.get("ENVIRONMENT") === "development";
+    
     return new Response(
       JSON.stringify({ 
         success: true,
         message: "Verification email sent successfully",
-        // Include verification URL in response for testing/development
-        verificationUrl: verificationUrl,
+        // Include verification URL only in development for testing
+        ...(isDevelopment && { verificationUrl }),
       }),
       {
         status: 200,

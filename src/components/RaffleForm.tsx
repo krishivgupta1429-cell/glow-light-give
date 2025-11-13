@@ -81,8 +81,8 @@ const RaffleForm = () => {
   const selectedCanOption = canOptions.find(
     (option) => option.label === formData.cansQuantity
   );
-  const cansQuantity = selectedCanOption?.quantity || 0;
-  const cansAmountUsd = selectedCanOption?.amount || 0;
+  const cansQuantity = (formData.cansQuantity === "none" || !formData.cansQuantity) ? 0 : (selectedCanOption?.quantity || 0);
+  const cansAmountUsd = (formData.cansQuantity === "none" || !formData.cansQuantity) ? 0 : (selectedCanOption?.amount || 0);
 
   const sponsorshipOptions = [
     { id: "doughnut", label: "DOUGHNUT SPONSOR", amount: 36 },
@@ -450,14 +450,14 @@ const RaffleForm = () => {
           Each can helps spread the light in our community.
         </p>
         <Select
-          value={formData.cansQuantity}
+          value={formData.cansQuantity || "none"}
           onValueChange={handleCansQuantityChange}
         >
           <SelectTrigger className="bg-background border-border">
             <SelectValue placeholder="Select number of cans" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">None</SelectItem>
+            <SelectItem value="none">None</SelectItem>
             {canOptions.map((option) => (
               <SelectItem key={option.label} value={option.label}>
                 {option.label}

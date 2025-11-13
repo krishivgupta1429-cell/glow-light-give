@@ -118,8 +118,10 @@ export async function submitEntry(
     const verificationToken = generateVerificationToken();
 
     // Generate full phone in E.164 format if both parts are provided
-    const fullPhone = formData.areaCode && formData.phoneNumber 
-      ? `${formData.areaCode.trim()}${formData.phoneNumber.trim()}`
+    // Strip formatting from phone number (in case of US format)
+    const cleanedPhoneNumber = formData.phoneNumber ? formData.phoneNumber.replace(/\D/g, '') : '';
+    const fullPhone = formData.areaCode && cleanedPhoneNumber 
+      ? `${formData.areaCode.trim()}${cleanedPhoneNumber}`
       : null;
 
     // Prepare the database entry
@@ -127,7 +129,7 @@ export async function submitEntry(
       full_name: formData.fullName.trim(),
       email: formData.email.trim().toLowerCase(),
       area_code: formData.areaCode.trim() || null,
-      phone_number: formData.phoneNumber.trim() || null,
+      phone_number: formData.phoneNumber ? formData.phoneNumber.replace(/\D/g, '').trim() : null,
       full_phone: fullPhone,
       reason: formData.enjoyReason,
       reason_other: formData.otherEnjoyReason?.trim() || null,

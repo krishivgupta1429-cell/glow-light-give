@@ -37,7 +37,7 @@ const RaffleForm = () => {
 
   // Phone format mapping for different countries
   const phoneFormats: Record<string, { placeholder: string; digits: number }> = {
-    '+1': { placeholder: '123-456-7890', digits: 10 },    // US/Canada
+    '+1': { placeholder: '(123) 456-7890', digits: 10 },    // US/Canada
     '+44': { placeholder: '7123 456789', digits: 10 },    // UK
     '+91': { placeholder: '98765 43210', digits: 10 },    // India
     '+61': { placeholder: '412 345 678', digits: 9 },     // Australia
@@ -139,13 +139,30 @@ const RaffleForm = () => {
     }
   };
 
-  // Handle phone number validation
+  // Handle phone number validation with US formatting
   const handlePhoneNumberChange = (value: string) => {
     // Strip all non-digit characters
     const digitsOnly = value.replace(/\D/g, '');
+    
     // Enforce max length based on current format
     if (digitsOnly.length <= currentFormat.digits) {
-      setFormData({ ...formData, phoneNumber: digitsOnly });
+      // For US/Canada (+1), format as (XXX) XXX-XXXX
+      if (formData.areaCode === '+1') {
+        let formatted = digitsOnly;
+        if (digitsOnly.length >= 1) {
+          formatted = `(${digitsOnly.slice(0, 3)}`;
+        }
+        if (digitsOnly.length >= 4) {
+          formatted = `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3, 6)}`;
+        }
+        if (digitsOnly.length >= 7) {
+          formatted = `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6, 10)}`;
+        }
+        setFormData({ ...formData, phoneNumber: formatted });
+      } else {
+        // For other countries, store digits only
+        setFormData({ ...formData, phoneNumber: digitsOnly });
+      }
       setPhoneNumberError("");
     }
   };
@@ -178,21 +195,32 @@ const RaffleForm = () => {
     if (formData.phoneNumber) {
       const cleanedNumber = formData.phoneNumber.replace(/\D/g, "");
       
-      // Validate based on current format
-      if (cleanedNumber.length < 6) {
-        setPhoneNumberError("Phone number must be at least 6 digits");
-        toast.error("Invalid Phone Number", {
-          description: "Phone number must be at least 6 digits",
-        });
-        return;
-      }
-      
-      if (cleanedNumber.length > currentFormat.digits) {
-        setPhoneNumberError(`Phone number must be at most ${currentFormat.digits} digits for ${formData.areaCode}`);
-        toast.error("Invalid Phone Number", {
-          description: `Phone number must be at most ${currentFormat.digits} digits for ${formData.areaCode}`,
-        });
-        return;
+      // Special validation for US numbers
+      if (formData.areaCode === '+1') {
+        if (cleanedNumber.length !== 10) {
+          setPhoneNumberError("Please enter a valid 10-digit US phone number.");
+          toast.error("Invalid Phone Number", {
+            description: "Please enter a valid 10-digit US phone number.",
+          });
+          return;
+        }
+      } else {
+        // Validate based on current format for other countries
+        if (cleanedNumber.length < 6) {
+          setPhoneNumberError("Phone number must be at least 6 digits");
+          toast.error("Invalid Phone Number", {
+            description: "Phone number must be at least 6 digits",
+          });
+          return;
+        }
+        
+        if (cleanedNumber.length > currentFormat.digits) {
+          setPhoneNumberError(`Phone number must be at most ${currentFormat.digits} digits for ${formData.areaCode}`);
+          toast.error("Invalid Phone Number", {
+            description: `Phone number must be at most ${currentFormat.digits} digits for ${formData.areaCode}`,
+          });
+          return;
+        }
       }
     }
 
@@ -387,7 +415,7 @@ const RaffleForm = () => {
             {/* Area Code */}
             <div className="sm:w-24 flex-shrink-0">
               <Label htmlFor="areaCode" className="text-xs text-foreground/70 mb-1 block">
-                Area Code
+                Country Code
               </Label>
               <Input
                 id="areaCode"

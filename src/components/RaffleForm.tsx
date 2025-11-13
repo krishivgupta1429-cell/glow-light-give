@@ -93,9 +93,12 @@ const RaffleForm = () => {
         sponsorships: [...formData.sponsorships, sponsorshipId],
       });
     } else {
+      const newSponsorships = formData.sponsorships.filter((id) => id !== sponsorshipId);
       setFormData({
         ...formData,
-        sponsorships: formData.sponsorships.filter((id) => id !== sponsorshipId),
+        sponsorships: newSponsorships,
+        // Clear cans selection if no sponsorships remain
+        cansQuantity: newSponsorships.length === 0 ? "" : formData.cansQuantity,
       });
     }
   };

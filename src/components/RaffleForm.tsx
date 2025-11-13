@@ -13,10 +13,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { submitEntry } from "@/lib/submitEntry";
 import { validateEmail } from "@/lib/emailValidation";
+import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
+import { PaymentForm } from '@/components/PaymentForm';
+import { supabase } from "@/integrations/supabase/client";
 
 const RaffleForm = () => {
+  const stripe = useStripe();
+  const elements = useElements();
+  
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -154,6 +159,25 @@ const RaffleForm = () => {
     }
   };
 
+  // Check if user is a donor
+  const isDonor = formData.sponsorships.length > 0;
+  const totalAmount = sponsorshipTotal + cansAmountUsd;
+
+  // Map sponsorship IDs to backend format
+  const getSponsorshipLevel = () => {
+    if (formData.sponsorships.length === 0) return null;
+    // For now, take the first sponsorship (can be enhanced for multiple)
+    const mapping: Record<string, string> = {
+      'doughnut': 'DOUGHNUT_BRONZE',
+      'doughnut-gold': 'DOUGHNUT_GOLD',
+      'doughnut-platinum': 'DOUGHNUT_SILVER',
+      'menorah': 'MENORAH_BRONZE',
+      'menorah-gold': 'MENORAH_GOLD',
+      'menorah-platinum': 'MENORAH_SILVER',
+    };
+    return mapping[formData.sponsorships[0]] || null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -193,36 +217,157 @@ const RaffleForm = () => {
       return;
     }
 
-    // Set submitting state
     setIsSubmitting(true);
 
     try {
-      // Submit to database
-      const response = await submitEntry({
-        fullName: formData.fullName,
-        email: formData.email,
-        areaCode: formData.areaCode,
-        phoneNumber: formData.phoneNumber,
-        enjoyReason: formData.reason,
-        otherEnjoyReason: formData.otherReason,
-        sponsorships: formData.sponsorships,
-        cansQuantity: formData.cansQuantity,
-        comments: formData.comments,
-        emailUpdatesOptIn: formData.emailUpdatesOptIn,
-      });
-
-      if (response.success) {
-        if (response.needsVerification) {
-          toast.success("Registration Submitted!", {
-            description: "Please check your email to verify your address. You'll need to verify before completing your donation.",
-            duration: 8000,
+      // DONOR PATH: Process payment first
+      if (isDonor) {
+        if (!stripe || !elements) {
+          toast.error("Payment Error", {
+            description: "Payment system not loaded. Please refresh and try again.",
           });
-        } else {
-          toast.success("Success! ✨", {
-            description: "Thank you for being part of our community celebration.",
-          });
+          setIsSubmitting(false);
+          return;
         }
 
+        const cardElement = elements.getElement(CardElement);
+        if (!cardElement) {
+          toast.error("Payment Error", {
+            description: "Please enter your card details.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Create payment intent
+        const sponsorshipLevel = getSponsorshipLevel();
+        const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
+          'create-payment-intent',
+          {
+            body: {
+              sponsorshipLevel,
+              formData: {
+                fullName: formData.fullName,
+                email: formData.email,
+              },
+            },
+          }
+        );
+
+        if (paymentError || !paymentData) {
+          toast.error("Payment Error", {
+            description: "Failed to initialize payment. Please try again.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Confirm payment
+        const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
+          paymentData.clientSecret,
+          {
+            payment_method: {
+              card: cardElement,
+              billing_details: {
+                name: formData.fullName,
+                email: formData.email,
+              },
+            },
+          }
+        );
+
+        if (confirmError) {
+          toast.error("Payment Failed", {
+            description: confirmError.message || "Payment could not be processed.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (paymentIntent.status === 'succeeded') {
+          // Save submission to database
+          const { data: saveData, error: saveError } = await supabase.functions.invoke(
+            'save-donation-submission',
+            {
+              body: {
+                formData: {
+                  ...formData,
+                  enjoyReason: formData.reason,
+                  otherEnjoyReason: formData.otherReason,
+                  wantsEmailUpdates: formData.emailUpdatesOptIn,
+                  sponsorshipLevel,
+                  totalAmount: totalAmount * 100, // Convert to cents
+                  cansAmount: cansAmountUsd * 100,
+                },
+                submissionId: paymentData.submissionId,
+                paymentIntentId: paymentIntent.id,
+                isDonor: true,
+              },
+            }
+          );
+
+          if (saveError || !saveData) {
+            toast.error("Submission Error", {
+              description: "Payment succeeded but failed to save your entry. Please contact support.",
+            });
+            setIsSubmitting(false);
+            return;
+          }
+
+          toast.success("Success! ✨", {
+            description: "Thank you for your generous donation!",
+          });
+          
+          // Reset form
+          setFormData({
+            fullName: "",
+            email: "",
+            areaCode: "+1",
+            phoneNumber: "",
+            reason: "",
+            otherReason: "",
+            sponsorships: [],
+            cansQuantity: "",
+            comments: "",
+            emailUpdatesOptIn: false,
+          });
+          setEmailError("");
+          setAreaCodeError("");
+          setPhoneNumberError("");
+        }
+      } else {
+        // NON-DONOR PATH: Just save to database
+        const { data: saveData, error: saveError } = await supabase.functions.invoke(
+          'save-donation-submission',
+          {
+            body: {
+              formData: {
+                ...formData,
+                enjoyReason: formData.reason,
+                otherEnjoyReason: formData.otherReason,
+                totalAmount: 0,
+                cansAmount: 0,
+                wantsEmailUpdates: formData.emailUpdatesOptIn,
+              },
+              submissionId: null,
+              paymentIntentId: null,
+              isDonor: false,
+            },
+          }
+        );
+
+        if (saveError || !saveData) {
+          toast.error("Submission Failed", {
+            description: "Failed to save your entry. Please try again.",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        toast.success("Success! ✨", {
+          description: "Thank you for being part of our community celebration.",
+        });
+        
         // Reset form
         setFormData({
           fullName: "",
@@ -239,14 +384,10 @@ const RaffleForm = () => {
         setEmailError("");
         setAreaCodeError("");
         setPhoneNumberError("");
-      } else {
-        toast.error("Submission failed", {
-          description: response.error || "Please try again.",
-        });
       }
     } catch (error) {
-      console.error("Error submitting form:", error);
-      toast.error("Submission failed", {
+      console.error("Form submission error:", error);
+      toast.error("Submission Error", {
         description: "An unexpected error occurred. Please try again.",
       });
     } finally {
@@ -662,6 +803,9 @@ const RaffleForm = () => {
               </Label>
           </div>
         </div>
+
+        {/* Payment Form - Only show for donors */}
+        {isDonor && <PaymentForm totalAmount={totalAmount} />}
       </div>
 
       {/* Submit */}
@@ -672,7 +816,7 @@ const RaffleForm = () => {
           className="w-full relative overflow-hidden bg-gradient-to-r from-gold via-amber to-gold text-background font-semibold text-lg py-6 rounded-xl shadow-lg hover:shadow-[0_0_40px_rgba(255,215,0,0.6)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-gold/30 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           <span className="relative z-10">
-            {isSubmitting ? "Submitting..." : "Submit Entry"}
+            {isSubmitting ? "Processing..." : isDonor ? "Pay & Submit" : "Submit Entry"}
           </span>
           {/* Ripple effect on hover */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />

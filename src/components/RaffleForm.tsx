@@ -144,26 +144,36 @@ const RaffleForm = () => {
     // Strip all non-digit characters
     const digitsOnly = value.replace(/\D/g, '');
     
-    // Enforce max length based on current format
-    if (digitsOnly.length <= currentFormat.digits) {
-      // For US/Canada (+1), format as (XXX) XXX-XXXX
-      if (formData.areaCode === '+1') {
-        let formatted = digitsOnly;
-        if (digitsOnly.length >= 1) {
-          formatted = `(${digitsOnly.slice(0, 3)}`;
-        }
-        if (digitsOnly.length >= 4) {
-          formatted = `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3, 6)}`;
-        }
-        if (digitsOnly.length >= 7) {
-          formatted = `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6, 10)}`;
-        }
-        setFormData({ ...formData, phoneNumber: formatted });
+    // For US/Canada (+1), limit to exactly 10 digits and format as (XXX) XXX-XXXX
+    if (formData.areaCode === '+1') {
+      // Limit to 10 digits max
+      const limited = digitsOnly.slice(0, 10);
+      
+      let formatted = limited;
+      const len = limited.length;
+      
+      if (len <= 2) {
+        // 1-2 digits: show as-is (e.g., "4", "43")
+        formatted = limited;
+      } else if (len === 3) {
+        // 3 digits: add parentheses (e.g., "(434)")
+        formatted = `(${limited})`;
+      } else if (len <= 6) {
+        // 4-6 digits: (XXX) X... (e.g., "(434) 3", "(434) 334")
+        formatted = `(${limited.slice(0, 3)}) ${limited.slice(3)}`;
       } else {
-        // For other countries, store digits only
-        setFormData({ ...formData, phoneNumber: digitsOnly });
+        // 7-10 digits: (XXX) XXX-X... (e.g., "(434) 334-3", "(434) 334-3456")
+        formatted = `(${limited.slice(0, 3)}) ${limited.slice(3, 6)}-${limited.slice(6)}`;
       }
+      
+      setFormData({ ...formData, phoneNumber: formatted });
       setPhoneNumberError("");
+    } else {
+      // For other countries, enforce max length based on current format
+      if (digitsOnly.length <= currentFormat.digits) {
+        setFormData({ ...formData, phoneNumber: digitsOnly });
+        setPhoneNumberError("");
+      }
     }
   };
 
@@ -445,9 +455,7 @@ const RaffleForm = () => {
                 value={formData.phoneNumber}
                 onChange={(e) => handlePhoneNumberChange(e.target.value)}
                 required
-                maxLength={currentFormat.digits}
                 inputMode="numeric"
-                pattern="\d*"
                 className={`bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] ${
                   phoneNumberError ? "border-red-500 focus:border-red-500 focus:ring-red-500/40" : ""
                 }`}

@@ -679,6 +679,12 @@ const RaffleForm = () => {
               <SelectValue placeholder="Select quantity" />
             </SelectTrigger>
             <SelectContent className="bg-card/95 backdrop-blur-md border-border/60 text-foreground shadow-lg mobile-select-content">
+              <SelectItem
+                value=""
+                className="text-foreground focus:bg-gold/10 focus:text-gold hover:bg-gold/5 cursor-pointer transition-colors"
+              >
+                {" "}
+              </SelectItem>
               {canOptions.map((option) => (
                 <SelectItem
                   key={option.quantity}

@@ -15,7 +15,6 @@ import {
 import { toast } from "sonner";
 import { validateEmail } from "@/lib/emailValidation";
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
-import { PaymentForm } from '@/components/PaymentForm';
 import { supabase } from "@/integrations/supabase/client";
 
 const RaffleForm = () => {
@@ -161,7 +160,7 @@ const RaffleForm = () => {
 
   // Check if user is a donor
   const isDonor = formData.sponsorships.length > 0;
-  const totalAmount = sponsorshipTotal + cansAmountUsd;
+  const totalAmount = sponsorshipTotal; // Only charge for sponsorships, not cans
 
   // Map sponsorship IDs to backend format
   const getSponsorshipLevel = () => {
@@ -224,7 +223,7 @@ const RaffleForm = () => {
       if (isDonor) {
         if (!stripe || !elements) {
           toast.error("Payment Error", {
-            description: "Payment system not loaded. Please refresh and try again.",
+            description: "Payment system not ready. Please wait a moment and try again.",
           });
           setIsSubmitting(false);
           return;
@@ -233,7 +232,7 @@ const RaffleForm = () => {
         const cardElement = elements.getElement(CardElement);
         if (!cardElement) {
           toast.error("Payment Error", {
-            description: "Please enter your card details.",
+            description: "Please enter your card information.",
           });
           setIsSubmitting(false);
           return;
@@ -665,6 +664,60 @@ const RaffleForm = () => {
                 value={sponsorshipTotal.toFixed(2)}
               />
             </div>
+
+            {/* Total Charge Display */}
+            {totalAmount > 0 && (
+              <div className="mt-6 pt-6 border-t border-gold/30">
+                <div className="flex items-center justify-between text-lg font-semibold">
+                  <span className="text-foreground">Total Charge</span>
+                  <span className="text-gold">${totalAmount.toFixed(2)} USD</span>
+                </div>
+              </div>
+            )}
+
+            {/* Payment Details - Inline Stripe Card Element */}
+            {totalAmount > 0 && (
+              <div className="mt-6 p-6 rounded-lg border border-gold/30 bg-background/40 backdrop-blur-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-lg font-semibold text-foreground">
+                    💳 Payment Details
+                  </Label>
+                  <span className="text-gold font-semibold">
+                    ${totalAmount.toFixed(2)}
+                  </span>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="card-element" className="text-foreground/90">
+                    Card Information
+                  </Label>
+                  <div className="p-4 rounded-md border border-border/60 bg-input/80 backdrop-blur-sm hover:border-gold/60 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/40 transition-all duration-300">
+                    <CardElement
+                      id="card-element"
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: '16px',
+                            color: 'hsl(var(--foreground))',
+                            '::placeholder': {
+                              color: 'hsl(var(--foreground) / 0.5)',
+                            },
+                            backgroundColor: 'transparent',
+                          },
+                          invalid: {
+                            color: '#ef4444',
+                          },
+                        },
+                        hidePostalCode: false,
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Your payment is secured by Stripe. We never store your card details.
+                  </p>
+                </div>
+              </div>
+            )}
         </div>
 
         {/* Separator */}
@@ -803,16 +856,13 @@ const RaffleForm = () => {
               </Label>
           </div>
         </div>
-
-        {/* Payment Form - Only show for donors */}
-        {isDonor && <PaymentForm totalAmount={totalAmount} />}
       </div>
 
       {/* Submit */}
       <div className="pt-4">
         <Button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || (isDonor && (!stripe || !elements))}
           className="w-full relative overflow-hidden bg-gradient-to-r from-gold via-amber to-gold text-background font-semibold text-lg py-6 rounded-xl shadow-lg hover:shadow-[0_0_40px_rgba(255,215,0,0.6)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-gold/30 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           <span className="relative z-10">

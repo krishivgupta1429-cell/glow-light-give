@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { submitEntry } from "@/lib/submitEntry";
 
 const RaffleForm = () => {
   const [formData, setFormData] = useState({
@@ -26,6 +27,7 @@ const RaffleForm = () => {
     comments: "",
     emailUpdatesOptIn: false,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Can options with quantities and amounts
   const canOptions = [
@@ -81,9 +83,9 @@ const RaffleForm = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate otherReason if "other" is selected
     if (formData.reason === "other" && !formData.otherReason.trim()) {
       toast.error("Please tell us why you enjoy this event", {
@@ -91,11 +93,54 @@ const RaffleForm = () => {
       });
       return;
     }
-    
-    toast.success("Thank you for your entry! 🕎", {
-      description: "Your raffle submission has been received.",
-    });
-    console.log("Form submitted:", formData);
+
+    // Set submitting state
+    setIsSubmitting(true);
+
+    try {
+      // Submit to database
+      const response = await submitEntry({
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        enjoyReason: formData.reason,
+        otherEnjoyReason: formData.otherReason,
+        sponsorships: formData.sponsorships,
+        cansQuantity: formData.cansQuantity,
+        comments: formData.comments,
+        emailUpdatesOptIn: formData.emailUpdatesOptIn,
+      });
+
+      if (response.success) {
+        toast.success("Success! ✨", {
+          description: "Thank you for being part of our community celebration.",
+        });
+
+        // Reset form
+        setFormData({
+          fullName: "",
+          email: "",
+          phone: "",
+          reason: "",
+          otherReason: "",
+          sponsorships: [],
+          cansQuantity: "",
+          comments: "",
+          emailUpdatesOptIn: false,
+        });
+      } else {
+        toast.error("Submission failed", {
+          description: response.error || "Please try again.",
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error("Submission failed", {
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -470,9 +515,12 @@ const RaffleForm = () => {
       <div className="pt-4">
         <Button
           type="submit"
-          className="w-full relative overflow-hidden bg-gradient-to-r from-gold via-amber to-gold text-background font-semibold text-lg py-6 rounded-xl shadow-lg hover:shadow-[0_0_40px_rgba(255,215,0,0.6)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-gold/30 group"
+          disabled={isSubmitting}
+          className="w-full relative overflow-hidden bg-gradient-to-r from-gold via-amber to-gold text-background font-semibold text-lg py-6 rounded-xl shadow-lg hover:shadow-[0_0_40px_rgba(255,215,0,0.6)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-gold/30 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
-          <span className="relative z-10">Submit Entry</span>
+          <span className="relative z-10">
+            {isSubmitting ? "Submitting..." : "Submit Entry"}
+          </span>
           {/* Ripple effect on hover */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
         </Button>

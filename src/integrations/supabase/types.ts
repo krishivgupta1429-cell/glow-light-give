@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      menorah_entries: {
+        Row: {
+          id: string
+          created_at: string
+          full_name: string
+          email: string
+          phone: string | null
+          enjoy_reason: string
+          other_enjoy_reason: string | null
+          sponsorship_level: string | null
+          sponsorship_amount_usd: number
+          cans_option: string | null
+          cans_amount_usd: number
+          total_amount_usd: number
+          comments: string | null
+          wants_email_updates: boolean
+          lamplighter_eligible: boolean
+          raw_form_json: Json | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          full_name: string
+          email: string
+          phone?: string | null
+          enjoy_reason: string
+          other_enjoy_reason?: string | null
+          sponsorship_level?: string | null
+          sponsorship_amount_usd?: number
+          cans_option?: string | null
+          cans_amount_usd?: number
+          total_amount_usd?: number
+          comments?: string | null
+          wants_email_updates?: boolean
+          lamplighter_eligible?: boolean
+          raw_form_json?: Json | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          full_name?: string
+          email?: string
+          phone?: string | null
+          enjoy_reason?: string
+          other_enjoy_reason?: string | null
+          sponsorship_level?: string | null
+          sponsorship_amount_usd?: number
+          cans_option?: string | null
+          cans_amount_usd?: number
+          total_amount_usd?: number
+          comments?: string | null
+          wants_email_updates?: boolean
+          lamplighter_eligible?: boolean
+          raw_form_json?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

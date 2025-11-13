@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { submitEntry } from "@/lib/submitEntry";
 import { validateEmail } from "@/lib/emailValidation";
+import { supabase } from "@/integrations/supabase/client";
 
 const RaffleForm = () => {
   const [formData, setFormData] = useState({
@@ -152,49 +153,56 @@ const RaffleForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate email before submission
+    // Basic validation
+    if (!formData.fullName.trim()) {
+      toast.error("Please enter your full name");
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    // Email validation
     const emailValidation = validateEmail(formData.email);
     if (!emailValidation.valid) {
-      setEmailError(emailValidation.error || "Invalid email");
-      toast.error("Invalid Email", {
+      setEmailError(emailValidation.error);
+      toast.error("Invalid email", {
         description: emailValidation.error,
       });
       return;
     }
 
-    // Validate area code
-    if (formData.areaCode && !/^\+\d{1,3}$/.test(formData.areaCode)) {
-      setAreaCodeError("Area code must start with + and contain only digits");
-      toast.error("Invalid Area Code", {
-        description: "Please enter a valid area code (e.g., +1, +91)",
-      });
-      return;
-    }
-
-    // Validate phone number based on area code format
+    // Phone validation with format-specific rules
     if (formData.phoneNumber) {
-      const minDigits = 6;
-      const maxDigits = currentFormat.digits;
+      const cleanedNumber = formData.phoneNumber.replace(/\D/g, "");
       
-      if (formData.phoneNumber.length < minDigits) {
-        setPhoneNumberError(`Phone number must be at least ${minDigits} digits`);
+      // Validate based on current format
+      if (cleanedNumber.length < 6) {
+        setPhoneNumberError("Phone number must be at least 6 digits");
         toast.error("Invalid Phone Number", {
-          description: `Phone number must be at least ${minDigits} digits`,
-        });
-        return;
-      } else if (formData.phoneNumber.length > maxDigits) {
-        setPhoneNumberError(`Phone number must not exceed ${maxDigits} digits for this area code`);
-        toast.error("Invalid Phone Number", {
-          description: `Phone number must not exceed ${maxDigits} digits for this area code`,
-        });
-        return;
-      } else if (!/^\d+$/.test(formData.phoneNumber)) {
-        setPhoneNumberError("Phone number must contain only digits");
-        toast.error("Invalid Phone Number", {
-          description: "Phone number must contain only digits",
+          description: "Phone number must be at least 6 digits",
         });
         return;
       }
+      
+      if (cleanedNumber.length > currentFormat.digits) {
+        setPhoneNumberError(`Phone number must be at most ${currentFormat.digits} digits for ${formData.areaCode}`);
+        toast.error("Invalid Phone Number", {
+          description: `Phone number must be at most ${currentFormat.digits} digits for ${formData.areaCode}`,
+        });
+        return;
+      }
+    }
+
+    // Validate area code if provided
+    if (formData.areaCode && !formData.areaCode.startsWith('+')) {
+      setAreaCodeError("Area code must start with +");
+      toast.error("Invalid Area Code", {
+        description: "Area code must start with + (e.g., +1, +44, +91)",
+      });
+      return;
     }
 
     // If both area code and phone number are provided together or both empty, that's ok
@@ -227,52 +235,99 @@ const RaffleForm = () => {
     setIsSubmitting(true);
 
     try {
-      // Submit to database
-      const response = await submitEntry({
-        fullName: formData.fullName,
-        email: formData.email,
-        areaCode: formData.areaCode,
-        phoneNumber: formData.phoneNumber,
-        enjoyReason: formData.reason,
-        otherEnjoyReason: formData.otherReason,
-        sponsorships: formData.sponsorships,
-        cansQuantity: formData.cansQuantity,
-        comments: formData.comments,
-        emailUpdatesOptIn: formData.emailUpdatesOptIn,
-      });
+      // Check if user has sponsorships (wants to donate)
+      const hasSponsorships = formData.sponsorships.length > 0 || formData.cansQuantity !== "";
+      
+      if (hasSponsorships) {
+        // STRIPE PAYMENT FLOW
+        // First, save form submission to get an ID
+        const response = await submitEntry({
+          fullName: formData.fullName,
+          email: formData.email,
+          areaCode: formData.areaCode,
+          phoneNumber: formData.phoneNumber,
+          enjoyReason: formData.reason,
+          otherEnjoyReason: formData.otherReason,
+          sponsorships: formData.sponsorships,
+          cansQuantity: formData.cansQuantity,
+          comments: formData.comments,
+          emailUpdatesOptIn: formData.emailUpdatesOptIn,
+        });
 
-      if (response.success) {
-        if (response.needsVerification) {
-          toast.success("Registration Submitted!", {
-            description: "Please check your email to verify your address. You'll need to verify before completing your donation.",
-            duration: 8000,
+        if (!response.success || !response.entryId) {
+          toast.error("Submission failed", {
+            description: response.error || "Please try again.",
           });
-        } else {
+          return;
+        }
+
+        // Calculate total amount
+        const totalAmount = sponsorshipTotal + cansAmountUsd;
+
+        // Create Stripe checkout session
+        const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(
+          "create-checkout-session",
+          {
+            body: {
+              formSubmissionId: response.entryId,
+              amount: totalAmount,
+              email: formData.email,
+              fullName: formData.fullName,
+            },
+          }
+        );
+
+        if (checkoutError || !checkoutData?.url) {
+          console.error("Checkout error:", checkoutError);
+          toast.error("Payment setup failed", {
+            description: "Unable to create payment session. Please try again.",
+          });
+          return;
+        }
+
+        // Redirect to Stripe checkout
+        window.location.href = checkoutData.url;
+      } else {
+        // DIRECT SUBMISSION (NO PAYMENT)
+        const response = await submitEntry({
+          fullName: formData.fullName,
+          email: formData.email,
+          areaCode: formData.areaCode,
+          phoneNumber: formData.phoneNumber,
+          enjoyReason: formData.reason,
+          otherEnjoyReason: formData.otherReason,
+          sponsorships: formData.sponsorships,
+          cansQuantity: formData.cansQuantity,
+          comments: formData.comments,
+          emailUpdatesOptIn: formData.emailUpdatesOptIn,
+        });
+
+        if (response.success) {
           toast.success("Success! ✨", {
             description: "Thank you for being part of our community celebration.",
           });
-        }
 
-        // Reset form
-        setFormData({
-          fullName: "",
-          email: "",
-          areaCode: "+1",
-          phoneNumber: "",
-          reason: "",
-          otherReason: "",
-          sponsorships: [],
-          cansQuantity: "",
-          comments: "",
-          emailUpdatesOptIn: false,
-        });
-        setEmailError("");
-        setAreaCodeError("");
-        setPhoneNumberError("");
-      } else {
-        toast.error("Submission failed", {
-          description: response.error || "Please try again.",
-        });
+          // Reset form
+          setFormData({
+            fullName: "",
+            email: "",
+            areaCode: "+1",
+            phoneNumber: "",
+            reason: "",
+            otherReason: "",
+            sponsorships: [],
+            cansQuantity: "",
+            comments: "",
+            emailUpdatesOptIn: false,
+          });
+          setEmailError("");
+          setAreaCodeError("");
+          setPhoneNumberError("");
+        } else {
+          toast.error("Submission failed", {
+            description: response.error || "Please try again.",
+          });
+        }
       }
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -702,7 +757,12 @@ const RaffleForm = () => {
           className="w-full relative overflow-hidden bg-gradient-to-r from-gold via-amber to-gold text-background font-semibold text-lg py-6 rounded-xl shadow-lg hover:shadow-[0_0_40px_rgba(255,215,0,0.6)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-gold/30 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           <span className="relative z-10">
-            {isSubmitting ? "Submitting..." : "Submit Entry"}
+            {isSubmitting 
+              ? "Processing..." 
+              : (formData.sponsorships.length > 0 || formData.cansQuantity !== "") 
+                ? "Pay Now" 
+                : "Submit Entry"
+            }
           </span>
           {/* Ripple effect on hover */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />

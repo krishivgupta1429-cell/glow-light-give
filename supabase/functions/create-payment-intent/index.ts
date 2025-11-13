@@ -10,20 +10,22 @@ const corsHeaders = {
 
 // Sponsorship level to amount mapping (in cents)
 const SPONSORSHIP_AMOUNTS: Record<string, number> = {
-  'DOUGHNUT_BRONZE': 3600,  // $36
-  'DOUGHNUT_SILVER': 7200,  // $72
-  'DOUGHNUT_GOLD': 10800,   // $108
-  'MENORAH_BRONZE': 18000,  // $180
-  'MENORAH_SILVER': 36000,  // $360
-  'MENORAH_GOLD': 54000,    // $540
+  'doughnut': 3600,  // $36
+  'doughnut-gold': 7200,  // $72
+  'doughnut-platinum': 10800,   // $108
+  'menorah': 18000,  // $180
+  'menorah-gold': 36000,  // $360
+  'menorah-platinum': 54000,    // $540
 };
 
 // Input validation schema
-const FormDataSchema = z.object({
-  fullName: z.string().min(1).max(100),
-  email: z.string().email().max(255),
-  areaCode: z.string().regex(/^\d{3}$/).optional(),
-  phoneNumber: z.string().regex(/^\d{7}$/).optional(),
+const RequestSchema = z.object({
+  sponsorshipIds: z.array(z.string()).min(1, 'At least one sponsorship must be selected'),
+  cansQuantity: z.number().int().min(0).optional(),
+  formData: z.object({
+    fullName: z.string().min(1).max(100),
+    email: z.string().email().max(255),
+  }),
 });
 
 // Rate limiting store (in-memory, resets on function restart)
@@ -66,18 +68,41 @@ serve(async (req) => {
       );
     }
 
-    const { sponsorshipLevel, formData } = await req.json();
-
-    console.log('[CREATE-PAYMENT-INTENT] Request received', { sponsorshipLevel });
+    const requestData = await req.json();
+    console.log('[CREATE-PAYMENT-INTENT] Request received', { 
+      sponsorshipIds: requestData.sponsorshipIds,
+      cansQuantity: requestData.cansQuantity 
+    });
 
     // Validate input
-    const validatedData = FormDataSchema.parse(formData);
+    const { sponsorshipIds, cansQuantity, formData } = RequestSchema.parse(requestData);
 
-    // ONLY use server-side mapping - never trust client amount
-    const amountCents = SPONSORSHIP_AMOUNTS[sponsorshipLevel];
-    if (!amountCents) {
-      throw new Error(`Invalid sponsorship level: ${sponsorshipLevel}`);
+    // Calculate total amount from server-side prices
+    let totalAmountCents = 0;
+    
+    // Add sponsorship amounts
+    for (const id of sponsorshipIds) {
+      const amount = SPONSORSHIP_AMOUNTS[id];
+      if (!amount) {
+        throw new Error(`Invalid sponsorship ID: ${id}`);
+      }
+      totalAmountCents += amount;
     }
+
+    // Cans are $4 each (400 cents)
+    if (cansQuantity && cansQuantity > 0) {
+      totalAmountCents += cansQuantity * 400;
+    }
+
+    if (totalAmountCents <= 0) {
+      throw new Error('Total amount must be greater than zero');
+    }
+
+    console.log('[CREATE-PAYMENT-INTENT] Calculated amount', { 
+      sponsorshipIds,
+      cansQuantity,
+      totalAmountCents 
+    });
 
     // Initialize Stripe
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
@@ -91,24 +116,25 @@ serve(async (req) => {
 
     // Create PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountCents,
+      amount: totalAmountCents,
       currency: 'usd',
       automatic_payment_methods: {
         enabled: true,
       },
       metadata: {
         submission_id: submissionId,
-        sponsorship_level: sponsorshipLevel,
-        expected_amount: amountCents.toString(),
-        customer_name: validatedData.fullName,
-        customer_email: validatedData.email,
+        sponsorship_ids: sponsorshipIds.join(','),
+        cans_quantity: cansQuantity?.toString() || '0',
+        expected_amount: totalAmountCents.toString(),
+        customer_name: formData.fullName,
+        customer_email: formData.email,
       },
-      description: `${sponsorshipLevel} Sponsorship - ${validatedData.fullName}`,
+      description: `Sponsorship - ${formData.fullName}`,
     });
 
     console.log('[CREATE-PAYMENT-INTENT] PaymentIntent created', { 
       id: paymentIntent.id, 
-      amount: amountCents,
+      amount: totalAmountCents,
       submissionId 
     });
 

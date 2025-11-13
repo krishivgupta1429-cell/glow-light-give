@@ -162,21 +162,6 @@ const RaffleForm = () => {
   const isDonor = formData.sponsorships.length > 0;
   const totalAmount = sponsorshipTotal; // Only charge for sponsorships, not cans
 
-  // Map sponsorship IDs to backend format
-  const getSponsorshipLevel = () => {
-    if (formData.sponsorships.length === 0) return null;
-    // For now, take the first sponsorship (can be enhanced for multiple)
-    const mapping: Record<string, string> = {
-      'doughnut': 'DOUGHNUT_BRONZE',
-      'doughnut-gold': 'DOUGHNUT_SILVER',
-      'doughnut-platinum': 'DOUGHNUT_GOLD',
-      'menorah': 'MENORAH_BRONZE',
-      'menorah-gold': 'MENORAH_SILVER',
-      'menorah-platinum': 'MENORAH_GOLD',
-    };
-    return mapping[formData.sponsorships[0]] || null;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -239,13 +224,12 @@ const RaffleForm = () => {
         }
 
         // Create payment intent
-        const sponsorshipLevel = getSponsorshipLevel();
         const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
           'create-payment-intent',
           {
             body: {
-              amount: totalAmount * 100, // Convert dollars to cents
-              sponsorshipLevel,
+              sponsorshipIds: formData.sponsorships,
+              cansQuantity,
               formData: {
                 fullName: formData.fullName,
                 email: formData.email,
@@ -296,9 +280,9 @@ const RaffleForm = () => {
                   enjoyReason: formData.reason,
                   otherEnjoyReason: formData.otherReason,
                   wantsEmailUpdates: formData.emailUpdatesOptIn,
-                  sponsorshipLevel,
+                  sponsorships: formData.sponsorships.length,
                   totalAmount: totalAmount * 100, // Convert to cents
-                  cansAmount: cansAmountUsd * 100,
+                  cansQuantity,
                 },
                 submissionId: paymentData.submissionId,
                 paymentIntentId: paymentIntent.id,

@@ -63,6 +63,7 @@ export type Database = {
       }
       form_submissions: {
         Row: {
+          area_code: string | null
           cans_quantity: number | null
           comments: string | null
           created_at: string
@@ -73,6 +74,7 @@ export type Database = {
           full_name: string
           id: string
           phone: string | null
+          phone_number: string | null
           reason: string | null
           reason_other: string | null
           sponsorships: string[] | null
@@ -81,6 +83,7 @@ export type Database = {
           wants_to_donate: boolean | null
         }
         Insert: {
+          area_code?: string | null
           cans_quantity?: number | null
           comments?: string | null
           created_at?: string
@@ -91,6 +94,7 @@ export type Database = {
           full_name: string
           id?: string
           phone?: string | null
+          phone_number?: string | null
           reason?: string | null
           reason_other?: string | null
           sponsorships?: string[] | null
@@ -99,6 +103,7 @@ export type Database = {
           wants_to_donate?: boolean | null
         }
         Update: {
+          area_code?: string | null
           cans_quantity?: number | null
           comments?: string | null
           created_at?: string
@@ -109,6 +114,7 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
+          phone_number?: string | null
           reason?: string | null
           reason_other?: string | null
           sponsorships?: string[] | null

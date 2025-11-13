@@ -20,7 +20,8 @@ const RaffleForm = () => {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
-    phone: "",
+    areaCode: "+1",
+    phoneNumber: "",
     reason: "",
     otherReason: "",
     sponsorships: [] as string[],
@@ -30,6 +31,8 @@ const RaffleForm = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailError, setEmailError] = useState<string>("");
+  const [areaCodeError, setAreaCodeError] = useState<string>("");
+  const [phoneNumberError, setPhoneNumberError] = useState<string>("");
 
   // Can options with quantities and amounts
   const canOptions = [
@@ -101,6 +104,37 @@ const RaffleForm = () => {
     }
   };
 
+  // Handle area code validation
+  const handleAreaCodeChange = (value: string) => {
+    // Only allow + at the beginning and digits, max 4 characters
+    const cleaned = value.replace(/[^\d+]/g, '');
+    if (cleaned.startsWith('+') || cleaned === '') {
+      const areaCode = cleaned.slice(0, 4);
+      setFormData({ ...formData, areaCode });
+      
+      if (areaCode && areaCode.length < 2) {
+        setAreaCodeError("Area code must be at least 2 characters");
+      } else if (areaCode && !areaCode.startsWith('+')) {
+        setAreaCodeError("Area code must start with +");
+      } else {
+        setAreaCodeError("");
+      }
+    }
+  };
+
+  // Handle phone number validation
+  const handlePhoneNumberChange = (value: string) => {
+    // Only allow digits, max 15 characters
+    const phoneNumber = value.replace(/\D/g, '').slice(0, 15);
+    setFormData({ ...formData, phoneNumber });
+    
+    if (phoneNumber && phoneNumber.length < 7) {
+      setPhoneNumberError("Phone number must be at least 7 digits");
+    } else {
+      setPhoneNumberError("");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -130,7 +164,8 @@ const RaffleForm = () => {
       const response = await submitEntry({
         fullName: formData.fullName,
         email: formData.email,
-        phone: formData.phone,
+        areaCode: formData.areaCode,
+        phoneNumber: formData.phoneNumber,
         enjoyReason: formData.reason,
         otherEnjoyReason: formData.otherReason,
         sponsorships: formData.sponsorships,
@@ -155,7 +190,8 @@ const RaffleForm = () => {
         setFormData({
           fullName: "",
           email: "",
-          phone: "",
+          areaCode: "+1",
+          phoneNumber: "",
           reason: "",
           otherReason: "",
           sponsorships: [],
@@ -164,6 +200,8 @@ const RaffleForm = () => {
           emailUpdatesOptIn: false,
         });
         setEmailError("");
+        setAreaCodeError("");
+        setPhoneNumberError("");
       } else {
         toast.error("Submission failed", {
           description: response.error || "Please try again.",
@@ -218,20 +256,55 @@ const RaffleForm = () => {
           )}
         </div>
 
-        {/* Phone */}
+        {/* Phone - Area Code and Number */}
         <div className="space-y-2">
-          <Label htmlFor="phone" className="text-foreground font-medium text-base">
+          <Label className="text-foreground font-medium text-base">
             Phone Number <span className="text-gold">*</span>
           </Label>
-          <Input
-            id="phone"
-            type="tel"
-            placeholder="(555) 123-4567"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            required
-            className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)]"
-          />
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Area Code */}
+            <div className="sm:w-24 flex-shrink-0">
+              <Label htmlFor="areaCode" className="text-xs text-foreground/70 mb-1 block">
+                Area Code
+              </Label>
+              <Input
+                id="areaCode"
+                type="text"
+                placeholder="+1"
+                value={formData.areaCode}
+                onChange={(e) => handleAreaCodeChange(e.target.value)}
+                required
+                maxLength={4}
+                className={`bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] ${
+                  areaCodeError ? "border-red-500 focus:border-red-500 focus:ring-red-500/40" : ""
+                }`}
+              />
+              {areaCodeError && (
+                <p className="text-xs text-red-500 mt-1">{areaCodeError}</p>
+              )}
+            </div>
+            {/* Phone Number */}
+            <div className="flex-1">
+              <Label htmlFor="phoneNumber" className="text-xs text-foreground/70 mb-1 block">
+                Number
+              </Label>
+              <Input
+                id="phoneNumber"
+                type="tel"
+                placeholder="9876543210"
+                value={formData.phoneNumber}
+                onChange={(e) => handlePhoneNumberChange(e.target.value)}
+                required
+                maxLength={15}
+                className={`bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] ${
+                  phoneNumberError ? "border-red-500 focus:border-red-500 focus:ring-red-500/40" : ""
+                }`}
+              />
+              {phoneNumberError && (
+                <p className="text-xs text-red-500 mt-1">{phoneNumberError}</p>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Separator */}

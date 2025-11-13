@@ -4,7 +4,8 @@ import { validateEmail } from "./emailValidation";
 export interface MenorahEntryData {
   fullName: string;
   email: string;
-  phone: string;
+  areaCode: string;
+  phoneNumber: string;
   enjoyReason: string;
   otherEnjoyReason?: string;
   sponsorships: string[];
@@ -120,7 +121,8 @@ export async function submitEntry(
     const entry = {
       full_name: formData.fullName.trim(),
       email: formData.email.trim().toLowerCase(),
-      phone: formData.phone?.trim() || null,
+      area_code: formData.areaCode.trim() || null,
+      phone_number: formData.phoneNumber.trim() || null,
       reason: formData.enjoyReason,
       reason_other: formData.otherEnjoyReason?.trim() || null,
       sponsorships: formData.sponsorships,

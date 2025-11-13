@@ -173,7 +173,7 @@ const Index = () => {
             </div>
 
             <div className="relative z-10">
-              <RaffleFormWrapper />
+              <RaffleForm />
             </div>
           </div>
         </div>

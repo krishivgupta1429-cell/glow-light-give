@@ -49,6 +49,7 @@ const RaffleForm = () => {
 
   // Can options with quantities and amounts
   const canOptions = [
+    { quantity: 0, label: "0 CANS – $0", amount: 0 },
     { quantity: 1, label: "1 CAN – $4", amount: 4 },
     { quantity: 2, label: "2 CAN – $8", amount: 8 },
     { quantity: 4, label: "4 CANS – $16", amount: 16 },

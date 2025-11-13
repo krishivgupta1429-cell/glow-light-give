@@ -141,20 +141,21 @@ export async function submitEntry(
       verification_sent_at: new Date().toISOString(),
     };
 
-    // Insert into database
-    const { data, error } = await supabase
-      .from("form_submissions")
-      .insert(entry)
-      .select("id")
-      .single();
+    // Insert via Edge Function to bypass RLS
+    const { data: insertData, error: insertError } = await supabase.functions.invoke('submit-form-entry', {
+      body: entry,
+    });
 
-    if (error) {
-      console.error("Error inserting form submission:", error);
+    if (insertError || !insertData?.id) {
+      console.error("Error inserting form submission via function:", insertError);
       return {
         success: false,
         error: "Failed to submit your entry. Please try again.",
       };
     }
+
+    const data = { id: insertData.id as string };
+
 
     // Send verification email
     try {

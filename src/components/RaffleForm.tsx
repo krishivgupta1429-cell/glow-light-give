@@ -26,6 +26,7 @@ const RaffleForm = () => {
     reason: "",
     otherReason: "",
     sponsorships: [] as string[],
+    selectQuantityOnly: false,
     cansQuantity: "",
     comments: "",
     emailUpdatesOptIn: false,
@@ -91,16 +92,24 @@ const RaffleForm = () => {
       setFormData({
         ...formData,
         sponsorships: [...formData.sponsorships, sponsorshipId],
+        selectQuantityOnly: false, // Clear "Select Quantity Only" when any sponsorship is selected
       });
     } else {
       const newSponsorships = formData.sponsorships.filter((id) => id !== sponsorshipId);
       setFormData({
         ...formData,
         sponsorships: newSponsorships,
-        // Clear cans selection if no sponsorships remain
-        cansQuantity: newSponsorships.length === 0 ? "" : formData.cansQuantity,
       });
     }
+  };
+
+  // Handle "Select Quantity Only" checkbox change
+  const handleQuantityOnlyChange = (checked: boolean) => {
+    setFormData({
+      ...formData,
+      selectQuantityOnly: checked,
+      sponsorships: checked ? [] : formData.sponsorships, // Clear all sponsorships when "Select Quantity Only" is checked
+    });
   };
 
   // Handle email validation
@@ -357,6 +366,7 @@ const RaffleForm = () => {
             reason: "",
             otherReason: "",
             sponsorships: [],
+            selectQuantityOnly: false,
             cansQuantity: "",
             comments: "",
             emailUpdatesOptIn: false,
@@ -589,9 +599,37 @@ const RaffleForm = () => {
                             ${option.amount}
                           </span>
               </Label>
-            </div>
+                      </div>
                     );
                   })}
+                  
+                  {/* Select Quantity Only Option */}
+                  <div
+                    className={`flex items-center space-x-3 group sponsorship-card transition-opacity duration-200 ${
+                      formData.selectQuantityOnly
+                        ? "border-gold bg-gold/15"
+                        : "border-gold/30 bg-gold/5"
+                    }`}
+                  >
+                    <Checkbox
+                      id="sponsorship-quantity-only"
+                      checked={formData.selectQuantityOnly}
+                      onCheckedChange={(checked) => {
+                        handleQuantityOnlyChange(checked as boolean);
+                      }}
+                      className="border-gold/60 data-[state=checked]:bg-gold data-[state=checked]:border-gold ring-offset-background focus-visible:ring-2 focus-visible:ring-gold/40 transition-opacity duration-200 shrink-0 sponsorship-checkbox"
+                      aria-label="Select Quantity Only - $0"
+                    />
+                    <Label
+                      htmlFor="sponsorship-quantity-only"
+                      className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200 flex-1 flex items-center justify-between sponsorship-label-text min-h-[44px]"
+                    >
+                      <span className={`${formData.selectQuantityOnly ? "text-gold font-medium" : ""} sponsorship-title`}>SELECT QUANTITY ONLY</span>
+                      <span className={`font-semibold ml-4 whitespace-nowrap ${formData.selectQuantityOnly ? "text-gold" : "text-gold/80"} sponsorship-price`}>
+                        $0
+                      </span>
+                    </Label>
+                  </div>
                 </div>
               </div>
               
@@ -599,7 +637,7 @@ const RaffleForm = () => {
               <div className="flex items-center justify-between pt-4 mt-4 border-t border-gold/30">
                 <span className="text-foreground font-semibold text-base md:text-lg">Total Charge</span>
                 <span className="text-gold font-bold text-lg md:text-xl">
-                  ${sponsorshipTotal.toFixed(2)} USD
+                  ${(sponsorshipTotal + cansAmountUsd).toFixed(2)} USD
                 </span>
               </div>
               
@@ -681,20 +719,13 @@ const RaffleForm = () => {
           <Select
             value={formData.cansQuantity}
             onValueChange={(value) => setFormData({ ...formData, cansQuantity: value })}
-            disabled={formData.sponsorships.length === 0}
           >
             <SelectTrigger
               id="cansQuantity"
               aria-label="Select quantity of cans"
               className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)]"
             >
-              <SelectValue 
-                placeholder={
-                  formData.sponsorships.length === 0 
-                    ? "Become a sponsor above to select cans" 
-                    : "Select quantity"
-                } 
-              />
+              <SelectValue placeholder="Select quantity" />
             </SelectTrigger>
             <SelectContent className="bg-card/95 backdrop-blur-md border-border/60 text-foreground shadow-lg mobile-select-content">
               {canOptions.map((option) => (

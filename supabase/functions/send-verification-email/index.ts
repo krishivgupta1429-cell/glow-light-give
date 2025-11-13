@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,67 +11,24 @@ interface VerificationEmailRequest {
   token: string;
 }
 
-// Input validation
-const RequestSchema = z.object({
-  email: z.string().email().max(255),
-  name: z.string().min(1).max(100),
-  token: z.string().min(32).max(64),
-});
-
-// Rate limiting store
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string, limit: number, windowSeconds: number): boolean {
-  const now = Date.now();
-  const key = `email:${ip}`;
-  const record = rateLimitStore.get(key);
-
-  if (!record || record.resetAt < now) {
-    rateLimitStore.set(key, { count: 1, resetAt: now + windowSeconds * 1000 });
-    return true;
-  }
-
-  if (record.count >= limit) {
-    return false;
-  }
-
-  record.count++;
-  return true;
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Rate limiting - 3 emails per minute per IP
-  const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-  if (!checkRateLimit(ip, 3, 60)) {
-    console.warn('[SEND-VERIFICATION-EMAIL] Rate limit exceeded', { ip });
-    return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: 'Too many requests. Please try again later.' 
-      }),
-      {
-        status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
-  }
-
   try {
-    const rawData: VerificationEmailRequest = await req.json();
+    const { email, name, token }: VerificationEmailRequest = await req.json();
 
-    // Validate input
-    const { email, name, token } = RequestSchema.parse(rawData);
+    if (!email || !name || !token) {
+      throw new Error("Missing required fields: email, name, or token");
+    }
 
     const verificationUrl = `${req.headers.get("origin") || "https://light-the-way-glow.lovable.app"}/verify-email?token=${token}`;
 
-    // Log minimal information (token ID only, not the full URL)
+    // For now, log the verification URL (in production, integrate with email service)
     console.log("Verification email requested for:", email);
-    console.log("Token ID (first 8 chars):", token.substring(0, 8) + "...");
+    console.log("Verification URL:", verificationUrl);
     console.log("Name:", name);
 
     // TODO: Integrate with email service provider (e.g., Resend, SendGrid)
@@ -95,28 +51,24 @@ serve(async (req) => {
     //   `,
     // });
 
-    // Only return verification URL in development environment
-    const isDevelopment = Deno.env.get("ENVIRONMENT") === "development";
-    
     return new Response(
       JSON.stringify({ 
         success: true,
         message: "Verification email sent successfully",
-        // Include verification URL only in development for testing
-        ...(isDevelopment && { verificationUrl }),
+        // Include verification URL in response for testing/development
+        verificationUrl: verificationUrl,
       }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Error in send-verification-email function:", error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: errorMessage
+        error: error.message 
       }),
       {
         status: 500,

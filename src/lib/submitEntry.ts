@@ -117,18 +117,12 @@ export async function submitEntry(
     // Generate verification token
     const verificationToken = generateVerificationToken();
 
-    // Generate full phone in E.164 format
-    const fullPhone = formData.areaCode && formData.phoneNumber 
-      ? `${formData.areaCode}${formData.phoneNumber}` 
-      : null;
-
     // Prepare the database entry
     const entry = {
       full_name: formData.fullName.trim(),
       email: formData.email.trim().toLowerCase(),
       area_code: formData.areaCode.trim() || null,
       phone_number: formData.phoneNumber.trim() || null,
-      phone: fullPhone, // Store combined phone for backward compatibility
       reason: formData.enjoyReason,
       reason_other: formData.otherEnjoyReason?.trim() || null,
       sponsorships: formData.sponsorships,

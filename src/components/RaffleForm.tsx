@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,8 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { submitEntry } from "@/lib/submitEntry";
 import { validateEmail } from "@/lib/emailValidation";
-import { supabase } from "@/integrations/supabase/client";
 
 const RaffleForm = () => {
   const [formData, setFormData] = useState({
@@ -34,40 +34,7 @@ const RaffleForm = () => {
   const [areaCodeError, setAreaCodeError] = useState<string>("");
   const [phoneNumberError, setPhoneNumberError] = useState<string>("");
 
-  // Check for success/cancel query params on mount
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const checkoutStatus = params.get('checkout');
-    
-    if (checkoutStatus === 'success') {
-      toast.success("Success! ✨", {
-        description: "Thank you for being part of our community celebration.",
-      });
-      window.history.replaceState({}, '', window.location.pathname);
-    } else if (checkoutStatus === 'cancel') {
-      toast.error("Payment Canceled", {
-        description: "Payment was canceled. Your entry has not been recorded.",
-      });
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
-
-  // Phone format mapping by area code
-  const phoneFormats: Record<string, { placeholder: string; digits: number }> = {
-    '+1': { placeholder: '123-456-7890', digits: 10 },
-    '+44': { placeholder: '7123 456789', digits: 10 },
-    '+91': { placeholder: '98765 43210', digits: 10 },
-    '+61': { placeholder: '412 345 678', digits: 9 },
-    '+971': { placeholder: '50 123 4567', digits: 9 },
-    '+972': { placeholder: '50-123-4567', digits: 9 },
-  };
-
-  const currentPhoneFormat = phoneFormats[formData.areaCode] ?? { 
-    placeholder: 'Phone number', 
-    digits: 15 
-  };
-
-  // Can options
+  // Can options with quantities and amounts
   const canOptions = [
     { quantity: 1, label: "1 CAN – $4", amount: 4 },
     { quantity: 2, label: "2 CAN – $8", amount: 8 },
@@ -83,12 +50,14 @@ const RaffleForm = () => {
     { quantity: 100, label: "100 CANS – $400", amount: 400 },
   ];
 
+  // Get selected can option details
   const selectedCanOption = canOptions.find(
     (option) => option.label === formData.cansQuantity
   );
+  const cansQuantity = selectedCanOption?.quantity || 0;
   const cansAmountUsd = selectedCanOption?.amount || 0;
 
-  // Sponsorship options
+  // Sponsorship options with amounts
   const sponsorshipOptions = [
     { id: "doughnut", label: "DOUGHNUT SPONSOR", amount: 36 },
     { id: "doughnut-gold", label: "DOUGHNUT GOLD SPONSOR", amount: 72 },
@@ -98,11 +67,13 @@ const RaffleForm = () => {
     { id: "menorah-platinum", label: "MENORAH PLATINUM SPONSOR", amount: 540 },
   ];
 
+  // Calculate total sponsorship amount
   const sponsorshipTotal = formData.sponsorships.reduce((total, sponsorshipId) => {
     const option = sponsorshipOptions.find((opt) => opt.id === sponsorshipId);
     return total + (option?.amount || 0);
   }, 0);
 
+  // Handle sponsorship checkbox change
   const handleSponsorshipChange = (sponsorshipId: string, checked: boolean) => {
     if (checked) {
       setFormData({
@@ -117,87 +88,105 @@ const RaffleForm = () => {
     }
   };
 
+  // Handle email validation
   const handleEmailChange = (email: string) => {
     setFormData({ ...formData, email });
-    if (email) {
+    
+    if (email.trim()) {
       const validation = validateEmail(email);
-      setEmailError(validation.error || "");
+      if (!validation.valid) {
+        setEmailError(validation.error || "");
+      } else {
+        setEmailError("");
+      }
     } else {
       setEmailError("");
+    }
+  };
+
+  // Handle area code validation
+  const handleAreaCodeChange = (value: string) => {
+    // Only allow + at the beginning and digits, max 4 characters
+    const cleaned = value.replace(/[^\d+]/g, '');
+    if (cleaned.startsWith('+') || cleaned === '') {
+      const areaCode = cleaned.slice(0, 4);
+      setFormData({ ...formData, areaCode });
+      
+      if (areaCode && areaCode.length < 2) {
+        setAreaCodeError("Area code must be at least 2 characters");
+      } else if (areaCode && !areaCode.startsWith('+')) {
+        setAreaCodeError("Area code must start with +");
+      } else {
+        setAreaCodeError("");
+      }
+    }
+  };
+
+  // Handle phone number validation
+  const handlePhoneNumberChange = (value: string) => {
+    // Only allow digits, max 15 characters
+    const phoneNumber = value.replace(/\D/g, '').slice(0, 15);
+    setFormData({ ...formData, phoneNumber });
+    
+    if (phoneNumber && phoneNumber.length < 7) {
+      setPhoneNumberError("Phone number must be at least 7 digits");
+    } else {
+      setPhoneNumberError("");
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const totalAmount = sponsorshipTotal + cansAmountUsd;
-    const isDonor = totalAmount > 0;
-
-    if (emailError) {
-      toast.error("Validation Error", {
-        description: "Please fix all errors before submitting.",
+    // Validate email before submission
+    const emailValidation = validateEmail(formData.email);
+    if (!emailValidation.valid) {
+      setEmailError(emailValidation.error || "Invalid email");
+      toast.error("Invalid Email", {
+        description: emailValidation.error,
       });
       return;
     }
 
+    // Validate otherReason if "other" is selected
+    if (formData.reason === "other" && !formData.otherReason.trim()) {
+      toast.error("Please tell us why you enjoy this event", {
+        description: "The 'Other' option requires a response.",
+      });
+      return;
+    }
+
+    // Set submitting state
     setIsSubmitting(true);
 
     try {
-      if (isDonor) {
-        // DONOR PATH: Redirect to Stripe Checkout
-        const { data, error } = await supabase.functions.invoke(
-          'create-checkout-session',
-          {
-            body: formData,
-          }
-        );
+      // Submit to database
+      const response = await submitEntry({
+        fullName: formData.fullName,
+        email: formData.email,
+        areaCode: formData.areaCode,
+        phoneNumber: formData.phoneNumber,
+        enjoyReason: formData.reason,
+        otherEnjoyReason: formData.otherReason,
+        sponsorships: formData.sponsorships,
+        cansQuantity: formData.cansQuantity,
+        comments: formData.comments,
+        emailUpdatesOptIn: formData.emailUpdatesOptIn,
+      });
 
-        if (error || !data?.url) {
-          toast.error("Payment Error", {
-            description: "Failed to initialize payment. Please try again.",
+      if (response.success) {
+        if (response.needsVerification) {
+          toast.success("Registration Submitted!", {
+            description: "Please check your email to verify your address. You'll need to verify before completing your donation.",
+            duration: 8000,
           });
-          setIsSubmitting(false);
-          return;
+        } else {
+          toast.success("Success! ✨", {
+            description: "Thank you for being part of our community celebration.",
+          });
         }
 
-        // Redirect to Stripe Checkout
-        window.location.href = data.url;
-        return;
-      } else {
-        // NON-DONOR PATH: Save to database
-        const { data: saveData, error: saveError } = await supabase.functions.invoke(
-          'save-donation-submission',
-          {
-            body: {
-              formData: {
-                ...formData,
-                enjoyReason: formData.reason,
-                otherEnjoyReason: formData.otherReason,
-                totalAmount: 0,
-                cansAmount: 0,
-                wantsEmailUpdates: formData.emailUpdatesOptIn,
-                sponsorships: 0,
-                cansQuantity: 0,
-              },
-              submissionId: null,
-              paymentIntentId: null,
-              isDonor: false,
-            },
-          }
-        );
-
-        if (saveError || !saveData) {
-          toast.error("Submission Failed", {
-            description: "Failed to save your entry. Please try again.",
-          });
-          setIsSubmitting(false);
-          return;
-        }
-
-        toast.success("Success! ✨", {
-          description: "Thank you for being part of our community celebration.",
-        });
-        
+        // Reset form
         setFormData({
           fullName: "",
           email: "",
@@ -213,19 +202,20 @@ const RaffleForm = () => {
         setEmailError("");
         setAreaCodeError("");
         setPhoneNumberError("");
+      } else {
+        toast.error("Submission failed", {
+          description: response.error || "Please try again.",
+        });
       }
     } catch (error) {
-      console.error("Form submission error:", error);
-      toast.error("Submission Error", {
+      console.error("Error submitting form:", error);
+      toast.error("Submission failed", {
         description: "An unexpected error occurred. Please try again.",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const totalAmount = sponsorshipTotal + cansAmountUsd;
-  const isDonor = totalAmount > 0;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 md:space-y-8 w-full form-mobile">
@@ -257,156 +247,267 @@ const RaffleForm = () => {
             value={formData.email}
             onChange={(e) => handleEmailChange(e.target.value)}
             required
-            className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)]"
+            className={`bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] ${
+              emailError ? "border-red-500 focus:border-red-500 focus:ring-red-500/40" : ""
+            }`}
           />
           {emailError && (
-            <p className="text-sm text-red-400">{emailError}</p>
+            <p className="text-sm text-red-500 mt-1">{emailError}</p>
           )}
         </div>
 
-        {/* Phone Number */}
+        {/* Phone - Area Code and Number */}
         <div className="space-y-2">
-          <Label htmlFor="phoneNumber" className="text-foreground font-medium text-base">
+          <Label className="text-foreground font-medium text-base">
             Phone Number <span className="text-gold">*</span>
           </Label>
-          <div className="flex gap-2">
-            <Select
-              value={formData.areaCode}
-              onValueChange={(value) => {
-                setFormData({ ...formData, areaCode: value });
-                setAreaCodeError("");
-              }}
-            >
-              <SelectTrigger
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Area Code */}
+            <div className="sm:w-24 flex-shrink-0">
+              <Label htmlFor="areaCode" className="text-xs text-foreground/70 mb-1 block">
+                Area Code
+              </Label>
+              <Input
                 id="areaCode"
-                className="w-[120px] bg-input/80 backdrop-blur-sm border-border/60 text-foreground focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60"
-              >
-                <SelectValue placeholder="Code" />
-              </SelectTrigger>
-              <SelectContent className="bg-background/95 backdrop-blur-lg border-border">
-                <SelectItem value="+1">🇺🇸 +1</SelectItem>
-                <SelectItem value="+44">🇬🇧 +44</SelectItem>
-                <SelectItem value="+91">🇮🇳 +91</SelectItem>
-                <SelectItem value="+61">🇦🇺 +61</SelectItem>
-                <SelectItem value="+971">🇦🇪 +971</SelectItem>
-                <SelectItem value="+972">🇮🇱 +972</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input
-              id="phoneNumber"
-              type="tel"
-              placeholder={currentPhoneFormat.placeholder}
-              value={formData.phoneNumber}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '');
-                setFormData({ ...formData, phoneNumber: value });
-                setPhoneNumberError("");
-              }}
-              required
-              className="flex-1 bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)]"
-            />
+                type="text"
+                placeholder="+1"
+                value={formData.areaCode}
+                onChange={(e) => handleAreaCodeChange(e.target.value)}
+                required
+                maxLength={4}
+                className={`bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] ${
+                  areaCodeError ? "border-red-500 focus:border-red-500 focus:ring-red-500/40" : ""
+                }`}
+              />
+              {areaCodeError && (
+                <p className="text-xs text-red-500 mt-1">{areaCodeError}</p>
+              )}
+            </div>
+            {/* Phone Number */}
+            <div className="flex-1">
+              <Label htmlFor="phoneNumber" className="text-xs text-foreground/70 mb-1 block">
+                Number
+              </Label>
+              <Input
+                id="phoneNumber"
+                type="tel"
+                placeholder="9876543210"
+                value={formData.phoneNumber}
+                onChange={(e) => handlePhoneNumberChange(e.target.value)}
+                required
+                maxLength={15}
+                className={`bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] ${
+                  phoneNumberError ? "border-red-500 focus:border-red-500 focus:ring-red-500/40" : ""
+                }`}
+              />
+              {phoneNumberError && (
+                <p className="text-xs text-red-500 mt-1">{phoneNumberError}</p>
+              )}
+            </div>
           </div>
-          {(areaCodeError || phoneNumberError) && (
-            <p className="text-sm text-red-400">{areaCodeError || phoneNumberError}</p>
-          )}
+        </div>
+
+        {/* Separator */}
+        <div className="flex items-center justify-center py-4">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+          <div className="mx-4 text-2xl animate-candle-flicker">✨</div>
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
         </div>
 
         {/* Reason */}
         <div className="space-y-3">
           <Label className="text-foreground font-medium text-base">
-            What do you enjoy most about the JCC? <span className="text-gold">*</span>
+            I enjoy events like this because: <span className="text-gold">*</span>
           </Label>
           <RadioGroup
             value={formData.reason}
-            onValueChange={(value) => setFormData({ ...formData, reason: value })}
-            required
+            onValueChange={(value) => {
+              setFormData({ ...formData, reason: value, otherReason: value !== "other" ? "" : formData.otherReason });
+            }}
             className="space-y-2"
           >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="Programs" id="programs" className="border-border/60" />
-              <Label htmlFor="programs" className="font-normal cursor-pointer text-foreground/90">
-                Programs
+            <Label htmlFor="cultures" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="cultures" id="cultures" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
+                I enjoy learning about other cultures
+              </span>
               </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="Services" id="services" className="border-border/60" />
-              <Label htmlFor="services" className="font-normal cursor-pointer text-foreground/90">
-                Services
+            <Label htmlFor="jewish" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="jewish" id="jewish" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
+                I'm Jewish
+              </span>
               </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="Community" id="community" className="border-border/60" />
-              <Label htmlFor="community" className="font-normal cursor-pointer text-foreground/90">
-                Community
+            <Label htmlFor="support" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="support" id="support" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
+                I like to show my support for the Jewish Community
+              </span>
               </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="Events" id="events" className="border-border/60" />
-              <Label htmlFor="events" className="font-normal cursor-pointer text-foreground/90">
-                Events
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="Other" id="other" className="border-border/60" />
-              <Label htmlFor="other" className="font-normal cursor-pointer text-foreground/90">
+            <Label htmlFor="other" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+              <RadioGroupItem value="other" id="other" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" aria-controls="other-reason-textarea" />
+              <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
                 Other
+              </span>
               </Label>
-            </div>
           </RadioGroup>
-
-          {formData.reason === "Other" && (
-            <Input
-              placeholder="Please specify"
-              value={formData.otherReason}
-              onChange={(e) => setFormData({ ...formData, otherReason: e.target.value })}
-              className="mt-2 bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)]"
-            />
+          {/* Conditional textarea for "Other" option */}
+          {formData.reason === "other" && (
+            <div className="space-y-2 mt-2 pl-8 animate-fade-in">
+              <Textarea
+                id="other-reason-textarea"
+                placeholder="Tell us why you enjoy this event…"
+                value={formData.otherReason}
+                onChange={(e) => setFormData({ ...formData, otherReason: e.target.value })}
+                required={formData.reason === "other"}
+                className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] min-h-[100px] resize-y"
+                aria-label="Tell us why you enjoy this event"
+              />
+            </div>
           )}
         </div>
 
-        {/* Sponsorship Options */}
-        <div className="space-y-4">
-          <div className="relative">
-            <Label className="text-foreground font-bold text-lg md:text-xl block relative pb-2">
-              <span className="relative z-10 drop-shadow-[0_0_8px_rgba(255,215,0,0.3)]">
-                Sponsorship Opportunities
-              </span>
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-gold/60 to-transparent opacity-70 animate-pulse" />
-              <span className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent shadow-[0_0_6px_rgba(255,215,0,0.4)]" />
-            </Label>
-            <p className="text-sm text-foreground/70 mt-2">
-              Choose one or more sponsorship levels (optional)
-            </p>
-          </div>
-          <div className="space-y-2">
-            {sponsorshipOptions.map((option) => (
-              <div key={option.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={option.id}
-                  checked={formData.sponsorships.includes(option.id)}
-                  onCheckedChange={(checked) => handleSponsorshipChange(option.id, checked as boolean)}
-                  className="border-border/60"
-                />
-                <Label
-                  htmlFor={option.id}
-                  className="font-normal cursor-pointer text-foreground/90"
-                >
-                  {option.label} – ${option.amount}
-                </Label>
-              </div>
-            ))}
-          </div>
+        {/* Separator */}
+        <div className="flex items-center justify-center py-4">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+          <div className="mx-4 text-2xl animate-candle-flicker">✨</div>
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
         </div>
 
-        {/* Informational Card */}
+        {/* Support */}
+        <div className="space-y-4">
+          {/* Intro line */}
+          <p className="text-foreground font-medium text-base text-left">
+            This free community event is made possible by generous donors like you. Please consider supporting and being part of this beautiful celebration — your contribution will also make you a part of the Lamplighter Wall.
+          </p>
+          
+          {/* Sponsorship Section */}
+          <div 
+            id="sponsorship-section" 
+            className="space-y-4 mt-4 pt-4 border-t border-gold/20 content-offscreen" 
+            role="region" 
+            aria-labelledby="sponsorship-label"
+          >
+              {/* Label and Checkboxes Layout */}
+              <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6 sponsorship-container">
+                {/* Left Label */}
+                <Label id="sponsorship-label" className="text-foreground font-semibold text-base md:text-base whitespace-nowrap pt-1 sponsorship-label">
+                  I would like to be a
+          </Label>
+                
+                {/* Right: Vertical List of Checkboxes */}
+                <div className="flex-1 space-y-2 md:space-y-2.5 w-full sponsorship-list">
+                  {sponsorshipOptions.map((option) => {
+                    const isChecked = formData.sponsorships.includes(option.id);
+                    return (
+                      <div
+                        key={option.id}
+                        className={`flex items-center space-x-3 group sponsorship-card transition-opacity duration-200 ${
+                          isChecked
+                            ? "border-gold bg-gold/15"
+                            : "border-gold/30 bg-gold/5"
+                        }`}
+                      >
+                        <Checkbox
+                          id={`sponsorship-${option.id}`}
+                          checked={isChecked}
+                          onCheckedChange={(checked) => {
+                            handleSponsorshipChange(option.id, checked as boolean);
+                          }}
+                          className="border-gold/60 data-[state=checked]:bg-gold data-[state=checked]:border-gold ring-offset-background focus-visible:ring-2 focus-visible:ring-gold/40 transition-opacity duration-200 shrink-0 sponsorship-checkbox"
+                          aria-label={`${option.label} - $${option.amount}`}
+                        />
+                        <Label
+                          htmlFor={`sponsorship-${option.id}`}
+                          className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200 flex-1 flex items-center justify-between sponsorship-label-text min-h-[44px]"
+                        >
+                          <span className={`${isChecked ? "text-gold font-medium" : ""} sponsorship-title`}>{option.label}</span>
+                          <span className={`font-semibold ml-4 whitespace-nowrap ${isChecked ? "text-gold" : "text-gold/80"} sponsorship-price`}>
+                            ${option.amount}
+                          </span>
+              </Label>
+            </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* Total Charge Row */}
+              <div className="flex items-center justify-between pt-4 mt-4 border-t border-gold/30">
+                <span className="text-foreground font-semibold text-base md:text-lg">Total Charge</span>
+                <span className="text-gold font-bold text-lg md:text-xl">
+                  ${sponsorshipTotal.toFixed(2)} USD
+                </span>
+              </div>
+              
+              {/* Lamplighter Wall Button */}
+              <div className="flex justify-center pt-4 mt-4 border-t border-gold/20">
+                <button
+                  type="button"
+                  aria-disabled="true"
+                  className="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold/20 via-amber/15 to-gold/20 border border-gold/40 text-gold font-medium cursor-not-allowed opacity-75 hover:opacity-90 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] transition-all duration-200 active:scale-95 relative overflow-hidden"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Visual feedback only - no action
+                    const button = e.currentTarget;
+                    const rect = button.getBoundingClientRect();
+                    const ripple = document.createElement('span');
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.width = ripple.style.height = `${size}px`;
+                    ripple.style.left = `${x}px`;
+                    ripple.style.top = `${y}px`;
+                    ripple.className = 'absolute rounded-full bg-gold/20 pointer-events-none animate-ping';
+                    ripple.style.animationDuration = '0.6s';
+                    
+                    button.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 600);
+                  }}
+                >
+                  <span className="relative z-10">View the Lamplighter Wall</span>
+                </button>
+              </div>
+              
+              {/* Hidden inputs for form submission */}
+              <input
+                type="hidden"
+                name="selected_sponsorships"
+                value={formData.sponsorships
+                  .map((id) => sponsorshipOptions.find((opt) => opt.id === id)?.label)
+                  .filter(Boolean)
+                  .join(", ")}
+              />
+              <input
+                type="hidden"
+                name="sponsorship_total_usd"
+                value={sponsorshipTotal.toFixed(2)}
+              />
+            </div>
+        </div>
+
+        {/* Separator */}
+        <div className="flex items-center justify-center py-4">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+          <div className="mx-4 text-2xl animate-candle-flicker">✨</div>
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+        </div>
+
+        {/* Informational card - static, non-interactive */}
         <div className="space-y-4 bg-gradient-to-br from-purple-900/20 via-purple-800/15 to-gold/10 p-6 rounded-xl border border-purple-500/30 backdrop-blur-sm relative overflow-hidden">
+          {/* Subtle glow effect with purple accent */}
           <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-gold/5 pointer-events-none" />
+          {/* Header bar effect */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500/50 via-purple-400/40 to-gold/30" />
           <div className="relative z-10 space-y-3">
+            {/* Heading */}
             <h3 className="text-base font-semibold text-gold leading-tight flex items-center gap-2">
               <span className="text-lg">🥫</span>
               <span>Help Build a Menorah Out of Cans and Support Those in Need!</span>
             </h3>
+            
+            {/* Body content */}
             <div className="space-y-2 text-sm text-foreground/80 leading-relaxed">
               <p>
                 This year, we're building a menorah entirely out of canned food, which will later be donated to local homeless shelters. You can participate in this meaningful project in two ways:
@@ -416,10 +517,19 @@ const RaffleForm = () => {
                 <li>Have us do the shopping for you! And simply select how many cans you'd like to contribute. Each can costs an average of $4.</li>
               </ol>
             </div>
+            
+            {/* Closing line - smaller, italic */}
             <p className="text-xs text-foreground/70 italic leading-relaxed">
               Each can become a building block of hope, turning our celebration into a beacon of giving.
             </p>
           </div>
+        </div>
+
+        {/* Glowing Divider Separator */}
+        <div className="flex items-center justify-center py-6 md:py-8 my-4 md:my-6">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
+          <div className="mx-4 text-2xl animate-candle-flicker">✨</div>
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
         </div>
 
         {/* Can Quantity Selector */}
@@ -430,6 +540,7 @@ const RaffleForm = () => {
               className="text-foreground font-bold text-lg md:text-xl block relative pb-2"
             >
               <span className="relative z-10 drop-shadow-[0_0_8px_rgba(255,215,0,0.3)]">How many cans would you like us to shop for you?</span>
+              {/* Golden underline/highlight effect */}
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-gold/60 to-transparent opacity-70 animate-pulse" />
               <span className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent shadow-[0_0_6px_rgba(255,215,0,0.4)]" />
             </Label>
@@ -440,72 +551,94 @@ const RaffleForm = () => {
           >
             <SelectTrigger
               id="cansQuantity"
-              className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60"
+              aria-label="Select quantity of cans"
+              className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)]"
             >
-              <SelectValue placeholder="Select quantity (optional)" />
+              <SelectValue placeholder="Select quantity" />
             </SelectTrigger>
-            <SelectContent className="bg-background/95 backdrop-blur-lg border-border max-h-[300px]">
+            <SelectContent className="bg-card/95 backdrop-blur-md border-border/60 text-foreground shadow-lg mobile-select-content">
               {canOptions.map((option) => (
-                <SelectItem key={option.label} value={option.label}>
+                <SelectItem
+                  key={option.quantity}
+                  value={option.label}
+                  className="text-foreground focus:bg-gold/10 focus:text-gold hover:bg-gold/5 cursor-pointer transition-colors"
+                >
                   {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          
+          {/* Helper line */}
+          <p className="text-xs text-foreground/60 mt-2">
+            We'll purchase and deliver the cans on your behalf for the menorah construction.
+          </p>
+          
+          {/* Hidden inputs for form submission */}
+          <input
+            type="hidden"
+            name="cans_quantity"
+            value={cansQuantity}
+          />
+          <input
+            type="hidden"
+            name="cans_amount_usd"
+            value={cansAmountUsd.toFixed(2)}
+          />
         </div>
 
-        {/* Comments */}
+        {/* Comments / Special Requests */}
         <div className="space-y-2">
           <Label htmlFor="comments" className="text-foreground font-medium text-base">
-            Additional Comments (optional)
+            Comments or Special Requests
           </Label>
           <Textarea
             id="comments"
-            placeholder="Any additional thoughts or comments"
+            name="comments"
+            placeholder="Share your thoughts or any special requests…"
             value={formData.comments}
             onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
-            rows={4}
-            className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] resize-none"
+            className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] min-h-[100px] resize-y"
+            aria-label="Comments or special requests"
           />
         </div>
 
         {/* Email Updates Opt-in */}
-        <div className="flex items-start space-x-2 pt-2">
-          <Checkbox
-            id="emailUpdates"
-            checked={formData.emailUpdatesOptIn}
-            onCheckedChange={(checked) =>
-              setFormData({ ...formData, emailUpdatesOptIn: checked as boolean })
-            }
-            className="mt-1 border-border/60"
-          />
-          <Label
-            htmlFor="emailUpdates"
-            className="text-sm text-foreground/80 font-normal cursor-pointer leading-relaxed"
-          >
-            I'd like to receive email updates about upcoming events and programs at the JCC
-          </Label>
-        </div>
-
-        {/* Total Charge Display */}
-        {totalAmount > 0 && (
-          <div className="pt-4 border-t border-gold/20">
-            <div className="flex justify-between items-center text-lg font-semibold">
-              <span className="text-foreground">Total Charge:</span>
-              <span className="text-gold">${totalAmount.toFixed(2)}</span>
-            </div>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-3 group p-2 rounded-lg hover:bg-gold/5 transition-colors duration-200">
+            <Checkbox
+              id="emailUpdatesOptIn"
+              name="email_updates_opt_in"
+              checked={formData.emailUpdatesOptIn}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, emailUpdatesOptIn: checked as boolean })
+              }
+              className="mt-1 border-gold/60 data-[state=checked]:bg-gold data-[state=checked]:border-gold ring-offset-background focus-visible:ring-2 focus-visible:ring-gold/40 transition-all duration-200 email-updates-checkbox"
+            />
+              <Label
+              htmlFor="emailUpdatesOptIn"
+              className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200 text-sm leading-relaxed"
+              >
+              Yes, I would like to receive email updates about future Chabad Traverse City events and programs
+              </Label>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Submit Button */}
-      <Button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-gradient-to-r from-gold via-amber to-gold hover:from-gold/90 hover:via-amber/90 hover:to-gold/90 text-background font-bold py-6 text-lg shadow-[0_0_20px_rgba(255,215,0,0.4)] hover:shadow-[0_0_30px_rgba(255,215,0,0.6)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed border border-gold/30"
-      >
-        {isSubmitting ? "Processing..." : isDonor ? "Pay & Submit" : "Submit Entry"}
-      </Button>
+      {/* Submit */}
+      <div className="pt-4">
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full relative overflow-hidden bg-gradient-to-r from-gold via-amber to-gold text-background font-semibold text-lg py-6 rounded-xl shadow-lg hover:shadow-[0_0_40px_rgba(255,215,0,0.6)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-gold/30 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+        >
+          <span className="relative z-10">
+            {isSubmitting ? "Submitting..." : "Submit Entry"}
+          </span>
+          {/* Ripple effect on hover */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+        </Button>
+      </div>
     </form>
   );
 };

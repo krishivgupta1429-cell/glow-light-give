@@ -424,9 +424,9 @@ const RaffleForm = () => {
           <Label className="text-foreground font-medium text-base">
             Phone Number <span className="text-gold">*</span>
           </Label>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-row gap-3">
             {/* Area Code */}
-            <div className="sm:w-24 flex-shrink-0">
+            <div className="w-24 flex-shrink-0">
               <Label htmlFor="areaCode" className="text-xs text-foreground/70 mb-1 block">
                 Country Code
               </Label>

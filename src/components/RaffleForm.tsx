@@ -670,13 +670,20 @@ const RaffleForm = () => {
           <Select
             value={formData.cansQuantity}
             onValueChange={(value) => setFormData({ ...formData, cansQuantity: value })}
+            disabled={formData.sponsorships.length === 0}
           >
             <SelectTrigger
               id="cansQuantity"
               aria-label="Select quantity of cans"
               className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)]"
             >
-              <SelectValue placeholder="Select quantity" />
+              <SelectValue 
+                placeholder={
+                  formData.sponsorships.length === 0 
+                    ? "Become a sponsor above to select cans" 
+                    : "Select quantity"
+                } 
+              />
             </SelectTrigger>
             <SelectContent className="bg-card/95 backdrop-blur-md border-border/60 text-foreground shadow-lg mobile-select-content">
               {canOptions.map((option) => (

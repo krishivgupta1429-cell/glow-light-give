@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import FloatingParticles from "@/components/FloatingParticles";
-import { RaffleFormWrapper } from "@/components/RaffleFormWrapper";
+import RaffleForm from "@/components/RaffleForm";
 import MenorahCandles from "@/components/MenorahCandles";
 import { usePerformanceLogger } from "@/hooks/use-performance-logger";
 

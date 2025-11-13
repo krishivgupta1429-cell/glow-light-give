@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.verify-email-token]
 verify_jwt = false
+
+[functions.get-stripe-publishable-key]
+verify_jwt = false

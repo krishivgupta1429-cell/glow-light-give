@@ -130,6 +130,13 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Powered by Techrupt */}
+        <div className="text-center mb-8 animate-fade-in animation-delay-100">
+          <p className="text-lg font-bold text-gold drop-shadow-[0_0_15px_rgba(255,215,0,0.6)]">
+            Powered by Techrupt Innovations
+          </p>
+        </div>
+
         {/* Hero Section */}
         <div className="hero-section text-center mb-12 animate-fade-in">
           {/* Menorah with Blended Candle Effect */}
@@ -185,19 +192,14 @@ const Index = () => {
             May the lights of Chanukah bring warmth and joy to your home🕎
           </p>
           
-          {/* Contact message */}
-          <p className="text-sm text-foreground/60 font-normal">
-            Questions? Contact Chabad Traverse City
-          </p>
-          
           {/* Sponsor credit */}
-          <p className="text-xs text-foreground/50 font-normal">
+          <p className="text-base md:text-lg font-bold text-gold drop-shadow-[0_0_20px_rgba(255,215,0,0.5)]">
             Generously sponsored by Techrupt Innovations. Need tech for your idea?{' '}
             <a 
               href="https://docs.google.com/forms/d/e/1FAIpQLSf1d7_AmmXfYFQ1U47oAYKWS-AM_BIbbV-IBUpnCAKhSCo0IQ/viewform?usp=publish-editor"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gold/70 hover:text-gold underline transition-colors duration-200"
+              className="text-gold hover:text-amber underline hover:brightness-125 transition-all duration-200"
             >
               Click here
             </a>.

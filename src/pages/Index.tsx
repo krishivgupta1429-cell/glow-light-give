@@ -132,9 +132,11 @@ const Index = () => {
 
         {/* Powered by Techrupt */}
         <div className="text-center mb-8 animate-fade-in animation-delay-100">
-          <p className="text-base font-medium text-sky-blue drop-shadow-[0_0_12px_rgba(135,206,235,0.4)] tracking-wide">
-            Powered by Techrupt Innovations
-          </p>
+          <div className="inline-block px-6 py-2 rounded-full bg-amber/8 backdrop-blur-sm">
+            <p className="text-lg font-semibold tracking-wider" style={{ color: '#FFC670', textShadow: '0 0 10px rgba(255, 198, 112, 0.35)' }}>
+              Powered by Techrupt Innovations
+            </p>
+          </div>
         </div>
 
         {/* Hero Section */}

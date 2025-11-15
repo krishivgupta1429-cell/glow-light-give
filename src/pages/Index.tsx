@@ -132,7 +132,7 @@ const Index = () => {
 
         {/* Powered by Techrupt */}
         <div className="text-center mb-8 animate-fade-in animation-delay-100">
-          <p className="text-lg font-bold text-gold drop-shadow-[0_0_15px_rgba(255,215,0,0.6)]">
+          <p className="text-base font-medium text-sky-blue drop-shadow-[0_0_12px_rgba(135,206,235,0.4)] tracking-wide">
             Powered by Techrupt Innovations
           </p>
         </div>
@@ -193,13 +193,13 @@ const Index = () => {
           </p>
           
           {/* Sponsor credit */}
-          <p className="text-base md:text-lg font-bold text-gold drop-shadow-[0_0_20px_rgba(255,215,0,0.5)]">
+          <p className="text-sm md:text-base font-semibold text-ivory/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] tracking-wide">
             Generously sponsored by Techrupt Innovations. Need tech for your idea?{' '}
             <a 
               href="https://docs.google.com/forms/d/e/1FAIpQLSf1d7_AmmXfYFQ1U47oAYKWS-AM_BIbbV-IBUpnCAKhSCo0IQ/viewform?usp=publish-editor"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gold hover:text-amber underline hover:brightness-125 transition-all duration-200"
+              className="text-gold-light hover:underline transition-all duration-200"
             >
               Click here
             </a>.

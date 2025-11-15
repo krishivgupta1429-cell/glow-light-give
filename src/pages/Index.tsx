@@ -132,10 +132,15 @@ const Index = () => {
 
         {/* Powered by Techrupt */}
         <div className="text-center mb-8 animate-fade-in animation-delay-100">
-          <div className="inline-block px-6 py-2 rounded-full bg-amber/8 backdrop-blur-sm">
-            <p className="text-lg font-semibold tracking-wider" style={{ color: '#FFC670', textShadow: '0 0 10px rgba(255, 198, 112, 0.35)' }}>
+          <div className="relative inline-block">
+            {/* Small decorative ember icons */}
+            <span className="absolute -left-6 top-1/2 -translate-y-1/2 text-xs opacity-60" style={{ color: '#FFC670', textShadow: '0 0 8px rgba(255, 200, 100, 0.5)' }}>✨</span>
+            <p className="text-xl font-semibold tracking-wide" style={{ color: '#FFC670', textShadow: '0 0 12px rgba(255, 200, 100, 0.45)' }}>
               Powered by Techrupt Innovations
             </p>
+            <span className="absolute -right-6 top-1/2 -translate-y-1/2 text-xs opacity-60" style={{ color: '#FFC670', textShadow: '0 0 8px rgba(255, 200, 100, 0.5)' }}>✨</span>
+            {/* Elegant underline accent */}
+            <div className="mx-auto mt-2 w-3/5 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255, 198, 112, 0.4) 50%, transparent)', boxShadow: '0 0 4px rgba(255, 200, 100, 0.3)' }}></div>
           </div>
         </div>
 

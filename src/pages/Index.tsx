@@ -189,6 +189,19 @@ const Index = () => {
           <p className="text-sm text-foreground/60 font-normal">
             Questions? Contact Chabad Traverse City
           </p>
+          
+          {/* Sponsor credit */}
+          <p className="text-xs text-foreground/50 font-normal">
+            Generously sponsored by Techrupt Innovations. Need tech for your idea?{' '}
+            <a 
+              href="https://docs.google.com/forms/d/e/1FAIpQLSf1d7_AmmXfYFQ1U47oAYKWS-AM_BIbbV-IBUpnCAKhSCo0IQ/viewform?usp=publish-editor"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gold/70 hover:text-gold underline transition-colors duration-200"
+            >
+              Click here
+            </a>.
+          </p>
         </div>
       </div>
     </div>

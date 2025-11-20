@@ -739,26 +739,9 @@ const RaffleForm = () => {
         <div className="flex justify-center pt-4 mt-4 border-t border-gold/20">
           <button
             type="button"
-            aria-disabled="true"
-            className="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold/20 via-amber/15 to-gold/20 border border-gold/40 text-gold font-medium cursor-not-allowed opacity-75 hover:opacity-90 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] transition-all duration-200 active:scale-95 relative overflow-hidden"
-            onClick={(e) => {
-              e.preventDefault();
-              // Visual feedback only - no action
-              const button = e.currentTarget;
-              const rect = button.getBoundingClientRect();
-              const ripple = document.createElement('span');
-              const size = Math.max(rect.width, rect.height);
-              const x = e.clientX - rect.left - size / 2;
-              const y = e.clientY - rect.top - size / 2;
-              
-              ripple.style.width = ripple.style.height = `${size}px`;
-              ripple.style.left = `${x}px`;
-              ripple.style.top = `${y}px`;
-              ripple.className = 'absolute rounded-full bg-gold/20 pointer-events-none animate-ping';
-              ripple.style.animationDuration = '0.6s';
-              
-              button.appendChild(ripple);
-              setTimeout(() => ripple.remove(), 600);
+            className="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold/20 via-amber/15 to-gold/20 border border-gold/40 text-gold font-medium hover:opacity-90 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] transition-all duration-200 active:scale-95 relative overflow-hidden"
+            onClick={() => {
+              window.location.href = 'https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm';
             }}
           >
             <span className="relative z-10">View the Lamplighter Wall</span>

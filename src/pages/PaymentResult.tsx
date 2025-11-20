@@ -31,11 +31,7 @@ export default function PaymentResult() {
         const { data, error: fetchError } = await supabase.functions.invoke(
           "retrieve-checkout-session",
           {
-            body: null,
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            body: { session_id: sessionId },
           }
         );
 

@@ -13,12 +13,11 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const sessionId = url.searchParams.get("session_id");
+    const { session_id } = await req.json();
 
-    console.log("Retrieving checkout session:", sessionId);
+    console.log("Retrieving checkout session:", session_id);
 
-    if (!sessionId) {
+    if (!session_id) {
       throw new Error("Missing session_id parameter");
     }
 
@@ -28,7 +27,7 @@ serve(async (req) => {
     });
 
     // Retrieve the checkout session
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const session = await stripe.checkout.sessions.retrieve(session_id);
 
     console.log("Session retrieved:", {
       id: session.id,

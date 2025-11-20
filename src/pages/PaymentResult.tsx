@@ -28,18 +28,18 @@ export default function PaymentResult() {
       }
 
       try {
-        // First, get the Stripe session details
-        const { data: stripeData, error: stripeError } = await supabase.functions.invoke(
-          "retrieve-checkout-session",
+        // Call verify-payment to both check Stripe AND update the database
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+          "verify-payment",
           {
             body: { session_id: sessionId },
           }
         );
 
-        if (stripeError) throw stripeError;
+        if (verifyError) throw verifyError;
 
-        // Then check the database for the actual payment status
-        const { data: submissions, error: dbError } = await supabase
+        // Now fetch the updated form submission from database
+        const { data: submission, error: dbError } = await supabase
           .from("form_submissions")
           .select("payment_status, payment_amount_cents, email, full_name")
           .eq("stripe_checkout_session_id", sessionId)
@@ -49,25 +49,25 @@ export default function PaymentResult() {
           console.error("Database error:", dbError);
         }
 
-        // Combine data from both sources
-        const combinedData = {
-          ...stripeData,
-          db_payment_status: submissions?.payment_status || "pending",
-          amount_total: submissions?.payment_amount_cents || stripeData.amount_total,
-          customer_email: submissions?.email || stripeData.customer_email,
-          full_name: submissions?.full_name,
+        const finalData = {
+          payment_status: verifyData.payment_status,
+          db_payment_status: submission?.payment_status || verifyData.payment_status,
+          amount_total: submission?.payment_amount_cents || verifyData.amount_total,
+          currency: verifyData.currency,
+          customer_email: submission?.email || verifyData.customer_email,
+          full_name: submission?.full_name,
         };
 
-        setPaymentData(combinedData);
+        setPaymentData(finalData);
         
-        // Check database status first, fall back to Stripe status
-        const finalStatus = submissions?.payment_status || 
-          (stripeData.payment_status === "paid" ? "success" : "pending");
+        const finalStatus = finalData.db_payment_status;
         
-        if (finalStatus === "fail") {
+        if (finalStatus === "failed") {
           setError("Payment failed");
         } else if (finalStatus === "pending") {
           setError("Payment is being processed");
+        } else if (finalStatus === "none") {
+          setError("No donation was made");
         } else if (finalStatus !== "success") {
           setError("Payment was not successful");
         }
@@ -93,7 +93,7 @@ export default function PaymentResult() {
             </h2>
             <p className="text-muted-foreground">Please wait a moment</p>
           </div>
-        ) : error || !paymentData || (paymentData.db_payment_status !== "success" && paymentData.payment_status !== "paid") ? (
+        ) : error || !paymentData || paymentData.db_payment_status !== "success" ? (
           <div className="text-center">
             <XCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
             <h2 className="text-xl font-semibold text-foreground mb-2">

@@ -28,18 +28,47 @@ export default function PaymentResult() {
       }
 
       try {
-        const { data, error: fetchError } = await supabase.functions.invoke(
+        // First, get the Stripe session details
+        const { data: stripeData, error: stripeError } = await supabase.functions.invoke(
           "retrieve-checkout-session",
           {
             body: { session_id: sessionId },
           }
         );
 
-        if (fetchError) throw fetchError;
+        if (stripeError) throw stripeError;
 
-        setPaymentData(data);
+        // Then check the database for the actual payment status
+        const { data: submissions, error: dbError } = await supabase
+          .from("form_submissions")
+          .select("payment_status, payment_amount_cents, email, full_name")
+          .eq("stripe_checkout_session_id", sessionId)
+          .maybeSingle();
+
+        if (dbError) {
+          console.error("Database error:", dbError);
+        }
+
+        // Combine data from both sources
+        const combinedData = {
+          ...stripeData,
+          db_payment_status: submissions?.payment_status || "pending",
+          amount_total: submissions?.payment_amount_cents || stripeData.amount_total,
+          customer_email: submissions?.email || stripeData.customer_email,
+          full_name: submissions?.full_name,
+        };
+
+        setPaymentData(combinedData);
         
-        if (data.payment_status !== "paid" && data.status !== "complete") {
+        // Check database status first, fall back to Stripe status
+        const finalStatus = submissions?.payment_status || 
+          (stripeData.payment_status === "paid" ? "success" : "pending");
+        
+        if (finalStatus === "fail") {
+          setError("Payment failed");
+        } else if (finalStatus === "pending") {
+          setError("Payment is being processed");
+        } else if (finalStatus !== "success") {
           setError("Payment was not successful");
         }
       } catch (err) {
@@ -64,7 +93,7 @@ export default function PaymentResult() {
             </h2>
             <p className="text-muted-foreground">Please wait a moment</p>
           </div>
-        ) : error || !paymentData || (paymentData.payment_status !== "paid" && paymentData.status !== "complete") ? (
+        ) : error || !paymentData || (paymentData.db_payment_status !== "success" && paymentData.payment_status !== "paid") ? (
           <div className="text-center">
             <XCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
             <h2 className="text-xl font-semibold text-foreground mb-2">

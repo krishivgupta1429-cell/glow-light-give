@@ -164,7 +164,7 @@ const Index = () => {
           </div>
           
           {/* Main message */}
-          <p className="text-lg md:text-xl text-gold font-light tracking-wide drop-shadow-[0_0_10px_rgba(255,215,0,0.3)]">
+          <p className="text-lg md:text-xl text-gold font-light tracking-wide drop-shadow-[0_0_10px_rgba(255,215,0,0.3)] text-center">
             May the lights of Chanukah bring warmth and joy to your home
           </p>
           

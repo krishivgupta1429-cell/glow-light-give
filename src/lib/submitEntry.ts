@@ -138,7 +138,6 @@ export async function submitEntry(
       comments: formData.comments?.trim() || null,
       email_updates_opt_in: formData.emailUpdatesOptIn,
       wants_to_donate: wantsToDonate,
-      email_verified: false,
       verification_token: verificationToken,
       verification_sent_at: new Date().toISOString(),
     };

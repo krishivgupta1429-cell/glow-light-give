@@ -69,13 +69,10 @@ export type Database = {
           created_at: string
           email: string
           email_updates_opt_in: boolean | null
-          email_verified: boolean | null
-          email_verified_at: string | null
           full_name: string
           full_phone: string | null
           id: string
           is_donor: boolean | null
-          phone: string | null
           phone_number: string | null
           reason: string | null
           reason_other: string | null
@@ -91,13 +88,10 @@ export type Database = {
           created_at?: string
           email: string
           email_updates_opt_in?: boolean | null
-          email_verified?: boolean | null
-          email_verified_at?: string | null
           full_name: string
           full_phone?: string | null
           id?: string
           is_donor?: boolean | null
-          phone?: string | null
           phone_number?: string | null
           reason?: string | null
           reason_other?: string | null
@@ -113,13 +107,10 @@ export type Database = {
           created_at?: string
           email?: string
           email_updates_opt_in?: boolean | null
-          email_verified?: boolean | null
-          email_verified_at?: string | null
           full_name?: string
           full_phone?: string | null
           id?: string
           is_donor?: boolean | null
-          phone?: string | null
           phone_number?: string | null
           reason?: string | null
           reason_other?: string | null

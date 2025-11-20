@@ -483,6 +483,13 @@ const RaffleForm = () => {
           </div>
         </div>
 
+        {/* Separator */}
+        <div className="flex items-center justify-center py-4">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+          <div className="mx-4 text-2xl animate-candle-flicker">✨</div>
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+        </div>
+
         {/* Attendance Section */}
         <div className="space-y-4">
           <Label className="text-foreground font-medium text-base">

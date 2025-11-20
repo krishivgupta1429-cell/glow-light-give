@@ -741,7 +741,7 @@ const RaffleForm = () => {
             type="button"
             className="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold/20 via-amber/15 to-gold/20 border border-gold/40 text-gold font-medium hover:opacity-90 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] transition-all duration-200 active:scale-95 relative overflow-hidden"
             onClick={() => {
-              window.location.href = 'https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm';
+              window.open('https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm', '_blank');
             }}
           >
             <span className="relative z-10">View the Lamplighter Wall</span>

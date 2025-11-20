@@ -7,6 +7,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Helper logging function
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[CREATE-CHECKOUT-LIVE] ${step}${detailsStr}`);
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -14,6 +20,17 @@ serve(async (req) => {
   }
 
   try {
+    logStep("Starting checkout session creation");
+
+    // Verify Stripe key is available
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      logStep("ERROR: STRIPE_SECRET_KEY not configured");
+      throw new Error("Stripe not configured");
+    }
+
+    logStep("Using LIVE mode Stripe key");
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
@@ -21,26 +38,30 @@ serve(async (req) => {
 
     const { formSubmissionId, amount, email, fullName } = await req.json();
 
-    console.log("Creating checkout session for:", { formSubmissionId, amount, email });
+    logStep("Request data", { formSubmissionId, amount, email, fullName });
 
     if (!formSubmissionId || !amount || !email) {
+      logStep("ERROR: Missing required parameters");
       throw new Error("Missing required parameters");
     }
 
     // Validate amount is positive
     if (amount <= 0) {
+      logStep("ERROR: Invalid amount", { amount });
       throw new Error("Invalid amount");
     }
 
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    // Initialize Stripe with live key
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2025-08-27.basil",
     });
 
     // Convert amount to cents
     const amountInCents = Math.round(amount * 100);
 
-    // Create Stripe checkout session
+    logStep("Creating Stripe checkout session", { amountInCents });
+
+    // Create Stripe checkout session in LIVE mode
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
@@ -66,7 +87,11 @@ serve(async (req) => {
       },
     });
 
-    console.log("Checkout session created:", session.id);
+    logStep("Checkout session created", { 
+      sessionId: session.id, 
+      url: session.url,
+      livemode: session.livemode
+    });
 
     // Immediately update form_submissions with the checkout session ID
     const supabaseAdmin = createClient(
@@ -74,26 +99,36 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    logStep("Updating form_submissions with session ID", { formSubmissionId });
+
     const { error: updateError } = await supabaseAdmin
       .from("form_submissions")
       .update({
         stripe_checkout_session_id: session.id,
         stripe_customer_id: session.customer as string || null,
+        payment_status: "pending",
       })
       .eq("id", formSubmissionId);
 
     if (updateError) {
-      console.error("Error updating form submission with session ID:", updateError);
-    } else {
-      console.log("Updated form_submissions with checkout session ID");
+      logStep("ERROR: Failed to update form_submissions", { error: updateError });
+      throw updateError;
     }
+
+    logStep("Successfully updated form_submissions", { 
+      formSubmissionId, 
+      sessionId: session.id 
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    console.error("Error creating checkout session:", error);
+    logStep("ERROR: Failed to create checkout session", { 
+      error: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       {

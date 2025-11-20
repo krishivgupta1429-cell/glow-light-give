@@ -68,6 +68,7 @@ serve(async (req) => {
       wants_to_donate: body.wants_to_donate ?? false,
       verification_token: body.verification_token,
       verification_sent_at: body.verification_sent_at,
+      payment_status: body.wants_to_donate ? "pending" : "none",
     };
 
     const { data, error } = await supabaseAdmin

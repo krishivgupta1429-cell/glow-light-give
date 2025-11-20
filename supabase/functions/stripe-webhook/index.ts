@@ -51,34 +51,18 @@ serve(async (req) => {
 
       const amountInCents = session.amount_total || 0;
 
-      console.log("Creating donation record for submission:", formSubmissionId);
+      console.log("Updating payment status for submission:", formSubmissionId);
 
-      // Create donation record
-      const { data: donation, error: donationError } = await supabaseAdmin
-        .from("donations")
-        .insert({
-          form_submission_id: formSubmissionId,
-          amount_cents: amountInCents,
-          stripe_customer_id: session.customer as string,
-          stripe_checkout_session_id: session.id,
-          stripe_payment_intent_id: paymentIntent.id,
-          status: "paid",
-        })
-        .select()
-        .single();
-
-      if (donationError) {
-        console.error("Error creating donation:", donationError);
-        throw donationError;
-      }
-
-      console.log("Donation created:", donation.id);
-
-      // Update form submission to mark as donor
+      // Update form submission with payment success and Stripe details
       const { error: updateError } = await supabaseAdmin
         .from("form_submissions")
         .update({
           is_donor: true,
+          payment_status: "success",
+          stripe_customer_id: session.customer as string,
+          stripe_checkout_session_id: session.id,
+          stripe_payment_intent_id: paymentIntent.id,
+          payment_amount_cents: amountInCents,
         })
         .eq("id", formSubmissionId);
 
@@ -87,7 +71,7 @@ serve(async (req) => {
         throw updateError;
       }
 
-      console.log("Form submission updated successfully");
+      console.log("Form submission payment status updated to success");
     }
 
     return new Response(JSON.stringify({ received: true }), {

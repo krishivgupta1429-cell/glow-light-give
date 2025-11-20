@@ -26,7 +26,6 @@ const RaffleForm = () => {
     reason: "",
     otherReason: "",
     sponsorships: [] as string[],
-    selectQuantityOnly: false,
     cansQuantity: "",
     comments: "",
     emailUpdatesOptIn: false,
@@ -93,7 +92,6 @@ const RaffleForm = () => {
       setFormData({
         ...formData,
         sponsorships: [...formData.sponsorships, sponsorshipId],
-        selectQuantityOnly: false, // Clear "Select Quantity Only" when any sponsorship is selected
       });
     } else {
       const newSponsorships = formData.sponsorships.filter((id) => id !== sponsorshipId);
@@ -102,15 +100,6 @@ const RaffleForm = () => {
         sponsorships: newSponsorships,
       });
     }
-  };
-
-  // Handle "Select Quantity Only" checkbox change
-  const handleQuantityOnlyChange = (checked: boolean) => {
-    setFormData({
-      ...formData,
-      selectQuantityOnly: checked,
-      sponsorships: checked ? [] : formData.sponsorships, // Clear all sponsorships when "Select Quantity Only" is checked
-    });
   };
 
   // Handle email validation
@@ -367,7 +356,6 @@ const RaffleForm = () => {
             reason: "",
             otherReason: "",
             sponsorships: [],
-            selectQuantityOnly: false,
             cansQuantity: "",
             comments: "",
             emailUpdatesOptIn: false,
@@ -603,34 +591,6 @@ const RaffleForm = () => {
                       </div>
                     );
                   })}
-                  
-                  {/* Select Quantity Only Option */}
-                  <div
-                    className={`flex items-center space-x-3 group sponsorship-card transition-opacity duration-200 ${
-                      formData.selectQuantityOnly
-                        ? "border-gold bg-gold/15"
-                        : "border-gold/30 bg-gold/5"
-                    }`}
-                  >
-                    <Checkbox
-                      id="sponsorship-quantity-only"
-                      checked={formData.selectQuantityOnly}
-                      onCheckedChange={(checked) => {
-                        handleQuantityOnlyChange(checked as boolean);
-                      }}
-                      className="border-gold/60 data-[state=checked]:bg-gold data-[state=checked]:border-gold ring-offset-background focus-visible:ring-2 focus-visible:ring-gold/40 transition-opacity duration-200 shrink-0 sponsorship-checkbox"
-                      aria-label="Select Quantity Only - $0"
-                    />
-                    <Label
-                      htmlFor="sponsorship-quantity-only"
-                      className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200 flex-1 flex items-center justify-between sponsorship-label-text min-h-[44px]"
-                    >
-                      <span className={`${formData.selectQuantityOnly ? "text-gold font-medium" : ""} sponsorship-title`}>SELECT QUANTITY ONLY</span>
-                      <span className={`font-semibold ml-4 whitespace-nowrap ${formData.selectQuantityOnly ? "text-gold" : "text-gold/80"} sponsorship-price`}>
-                        $0
-                      </span>
-                    </Label>
-                  </div>
                 </div>
               </div>
               

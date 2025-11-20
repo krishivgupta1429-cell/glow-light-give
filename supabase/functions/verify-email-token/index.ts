@@ -27,7 +27,7 @@ serve(async (req) => {
     // Find the submission with this token
     const { data: submission, error: findError } = await supabase
       .from("form_submissions")
-      .select("id, email, email_verified, verification_sent_at")
+      .select("id, email, verification_sent_at")
       .eq("verification_token", token)
       .single();
 
@@ -45,17 +45,23 @@ serve(async (req) => {
       );
     }
 
-    // Check if already verified
-    if (submission.email_verified) {
+    // Check if token already used (verification_token will be null)
+    const { data: currentSubmission } = await supabase
+      .from("form_submissions")
+      .select("verification_token")
+      .eq("id", submission.id)
+      .single();
+
+    if (!currentSubmission?.verification_token) {
       return new Response(
         JSON.stringify({ 
           success: true,
           alreadyVerified: true,
-          message: "Email already verified" 
+          message: "Email already verified"
         }),
-        {
-          status: 200,
+        { 
           headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200
         }
       );
     }
@@ -79,13 +85,11 @@ serve(async (req) => {
       );
     }
 
-    // Update the submission to mark as verified
+    // Update the submission to mark as verified by clearing the token
     const { error: updateError } = await supabase
       .from("form_submissions")
       .update({
-        email_verified: true,
-        email_verified_at: new Date().toISOString(),
-        verification_token: null, // Clear the token
+        verification_token: null, // Clear the token to mark as verified
       })
       .eq("id", submission.id);
 

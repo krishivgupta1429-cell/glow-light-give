@@ -74,12 +74,10 @@ serve(async (req) => {
 
       console.log("Donation created:", donation.id);
 
-      // Update form submission to mark as verified (payment confirms email)
+      // Update form submission to mark as donor
       const { error: updateError } = await supabaseAdmin
         .from("form_submissions")
         .update({
-          email_verified: true,
-          email_verified_at: new Date().toISOString(),
           is_donor: true,
         })
         .eq("id", formSubmissionId);

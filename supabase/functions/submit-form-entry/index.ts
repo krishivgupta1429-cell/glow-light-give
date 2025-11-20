@@ -19,7 +19,6 @@ interface SubmitEntryBody {
   comments?: string | null;
   email_updates_opt_in?: boolean;
   wants_to_donate?: boolean;
-  email_verified?: boolean;
   verification_token: string;
   verification_sent_at: string;
 }
@@ -67,7 +66,6 @@ serve(async (req) => {
       comments: body.comments?.trim() ?? null,
       email_updates_opt_in: body.email_updates_opt_in ?? false,
       wants_to_donate: body.wants_to_donate ?? false,
-      email_verified: body.email_verified ?? false,
       verification_token: body.verification_token,
       verification_sent_at: body.verification_sent_at,
     };

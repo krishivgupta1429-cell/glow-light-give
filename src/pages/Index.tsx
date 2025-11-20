@@ -130,16 +130,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Powered by Techrupt */}
-        <div className="text-center mb-8 animate-fade-in animation-delay-100">
-          <div className="relative inline-block">
-            <p className="text-xl font-semibold tracking-wide" style={{ color: '#FFC670', textShadow: '0 0 12px rgba(255, 200, 100, 0.45)' }}>
-              Powered by Techrupt Innovations
-            </p>
-            {/* Elegant underline accent */}
-            <div className="mx-auto mt-2 w-3/5 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255, 198, 112, 0.4) 50%, transparent)', boxShadow: '0 0 4px rgba(255, 200, 100, 0.3)' }}></div>
-          </div>
-        </div>
 
         {/* Hero Section */}
         <div className="hero-section text-center mb-12 animate-fade-in">
@@ -190,7 +180,18 @@ const Index = () => {
         </div>
 
         {/* Footer */}
-        <div className="mt-16 text-center animate-fade-in space-y-4 py-6 content-offscreen">
+        <div className="mt-16 text-center animate-fade-in space-y-6 py-6 content-offscreen">
+          {/* Powered by Techrupt */}
+          <div className="mb-4">
+            <div className="relative inline-block">
+              <p className="text-xl font-semibold tracking-wide" style={{ color: '#FFC670', textShadow: '0 0 12px rgba(255, 200, 100, 0.45)' }}>
+                Powered by Techrupt Innovations
+              </p>
+              {/* Elegant underline accent */}
+              <div className="mx-auto mt-2 w-3/5 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255, 198, 112, 0.4) 50%, transparent)', boxShadow: '0 0 4px rgba(255, 200, 100, 0.3)' }}></div>
+            </div>
+          </div>
+          
           {/* Main message */}
           <p className="text-lg md:text-xl text-gold font-light tracking-wide drop-shadow-[0_0_10px_rgba(255,215,0,0.3)]">
             May the lights of Chanukah bring warmth and joy to your home🕎

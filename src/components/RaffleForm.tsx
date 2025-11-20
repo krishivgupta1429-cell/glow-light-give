@@ -23,6 +23,8 @@ const RaffleForm = () => {
     email: "",
     areaCode: "+1",
     phoneNumber: "",
+    numberOfAdults: "",
+    numberOfChildren: "",
     reason: "",
     otherReason: "",
     sponsorships: [] as string[],
@@ -263,6 +265,12 @@ const RaffleForm = () => {
       return;
     }
 
+    // Validate number of adults
+    if (!formData.numberOfAdults) {
+      toast.error("Please select number of adults attending");
+      return;
+    }
+
     // Validate otherReason if "other" is selected
     if (formData.reason === "other" && !formData.otherReason.trim()) {
       toast.error("Please tell us why you enjoy this event", {
@@ -286,6 +294,8 @@ const RaffleForm = () => {
           email: formData.email,
           areaCode: formData.areaCode,
           phoneNumber: formData.phoneNumber,
+          numberOfAdults: formData.numberOfAdults,
+          numberOfChildren: formData.numberOfChildren,
           enjoyReason: formData.reason,
           otherEnjoyReason: formData.otherReason,
           sponsorships: formData.sponsorships,
@@ -334,6 +344,8 @@ const RaffleForm = () => {
           email: formData.email,
           areaCode: formData.areaCode,
           phoneNumber: formData.phoneNumber,
+          numberOfAdults: formData.numberOfAdults,
+          numberOfChildren: formData.numberOfChildren,
           enjoyReason: formData.reason,
           otherEnjoyReason: formData.otherReason,
           sponsorships: formData.sponsorships,
@@ -353,6 +365,8 @@ const RaffleForm = () => {
             email: "",
             areaCode: "+1",
             phoneNumber: "",
+            numberOfAdults: "",
+            numberOfChildren: "",
             reason: "",
             otherReason: "",
             sponsorships: [],
@@ -466,6 +480,64 @@ const RaffleForm = () => {
                 <p className="text-xs text-red-500 mt-1">{phoneNumberError}</p>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Attendance Section */}
+        <div className="space-y-4">
+          <Label className="text-foreground font-medium text-base">
+            How many people will be attending?
+          </Label>
+          
+          {/* Number of Adults */}
+          <div className="space-y-2">
+            <Label htmlFor="numberOfAdults" className="text-foreground font-medium text-sm">
+              Number of Adults <span className="text-gold">*</span>
+            </Label>
+            <Select
+              value={formData.numberOfAdults}
+              onValueChange={(value) => setFormData({ ...formData, numberOfAdults: value })}
+              required
+            >
+              <SelectTrigger
+                id="numberOfAdults"
+                className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)]"
+              >
+                <SelectValue placeholder="Select number of adults" />
+              </SelectTrigger>
+              <SelectContent className="bg-background/95 backdrop-blur-sm border-border/60 z-50">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Number of Children */}
+          <div className="space-y-2">
+            <Label htmlFor="numberOfChildren" className="text-foreground font-medium text-sm">
+              Number of Children (Optional)
+            </Label>
+            <Select
+              value={formData.numberOfChildren}
+              onValueChange={(value) => setFormData({ ...formData, numberOfChildren: value })}
+            >
+              <SelectTrigger
+                id="numberOfChildren"
+                className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)]"
+              >
+                <SelectValue placeholder="Select number of children" />
+              </SelectTrigger>
+              <SelectContent className="bg-background/95 backdrop-blur-sm border-border/60 z-50">
+                {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

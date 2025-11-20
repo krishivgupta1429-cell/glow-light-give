@@ -68,6 +68,26 @@ serve(async (req) => {
 
     console.log("Checkout session created:", session.id);
 
+    // Immediately update form_submissions with the checkout session ID
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { error: updateError } = await supabaseAdmin
+      .from("form_submissions")
+      .update({
+        stripe_checkout_session_id: session.id,
+        stripe_customer_id: session.customer as string || null,
+      })
+      .eq("id", formSubmissionId);
+
+    if (updateError) {
+      console.error("Error updating form submission with session ID:", updateError);
+    } else {
+      console.log("Updated form_submissions with checkout session ID");
+    }
+
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

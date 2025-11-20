@@ -12,6 +12,8 @@ interface SubmitEntryBody {
   area_code?: string | null;
   phone_number?: string | null;
   full_phone?: string | null;
+  number_of_adults: number;
+  number_of_children?: number;
   reason: string;
   reason_other?: string | null;
   sponsorships: string[];
@@ -39,7 +41,7 @@ serve(async (req) => {
     const body = (await req.json()) as Partial<SubmitEntryBody>;
 
     // Minimal validation of required fields
-    if (!body.full_name || !body.email || !body.reason || !body.verification_token || !body.verification_sent_at) {
+    if (!body.full_name || !body.email || !body.reason || !body.verification_token || !body.verification_sent_at || body.number_of_adults === undefined) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
@@ -59,6 +61,8 @@ serve(async (req) => {
       area_code: body.area_code?.trim() ?? null,
       phone_number: body.phone_number?.trim() ?? null,
       full_phone,
+      number_of_adults: body.number_of_adults,
+      number_of_children: body.number_of_children ?? 0,
       reason: body.reason,
       reason_other: body.reason_other?.trim() ?? null,
       sponsorships: body.sponsorships ?? [],

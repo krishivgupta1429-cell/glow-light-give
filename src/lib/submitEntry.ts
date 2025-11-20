@@ -6,6 +6,8 @@ export interface MenorahEntryData {
   email: string;
   areaCode: string;
   phoneNumber: string;
+  numberOfAdults: string;
+  numberOfChildren: string;
   enjoyReason: string;
   otherEnjoyReason?: string;
   sponsorships: string[];
@@ -131,6 +133,8 @@ export async function submitEntry(
       area_code: formData.areaCode.trim() || null,
       phone_number: formData.phoneNumber ? formData.phoneNumber.replace(/\D/g, '').trim() : null,
       full_phone: fullPhone,
+      number_of_adults: parseInt(formData.numberOfAdults, 10),
+      number_of_children: formData.numberOfChildren ? parseInt(formData.numberOfChildren, 10) : 0,
       reason: formData.enjoyReason,
       reason_other: formData.otherEnjoyReason?.trim() || null,
       sponsorships: formData.sponsorships,

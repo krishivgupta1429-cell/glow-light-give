@@ -73,6 +73,8 @@ export type Database = {
           full_phone: string | null
           id: string
           is_donor: boolean | null
+          number_of_adults: number | null
+          number_of_children: number | null
           payment_amount_cents: number | null
           payment_status: string | null
           phone_number: string | null
@@ -97,6 +99,8 @@ export type Database = {
           full_phone?: string | null
           id?: string
           is_donor?: boolean | null
+          number_of_adults?: number | null
+          number_of_children?: number | null
           payment_amount_cents?: number | null
           payment_status?: string | null
           phone_number?: string | null
@@ -121,6 +125,8 @@ export type Database = {
           full_phone?: string | null
           id?: string
           is_donor?: boolean | null
+          number_of_adults?: number | null
+          number_of_children?: number | null
           payment_amount_cents?: number | null
           payment_status?: string | null
           phone_number?: string | null

@@ -3,59 +3,37 @@ import FloatingParticles from "@/components/FloatingParticles";
 import RaffleForm from "@/components/RaffleForm";
 import MenorahCandles from "@/components/MenorahCandles";
 import { usePerformanceLogger } from "@/hooks/use-performance-logger";
-
-const GoldenFlameIcon = ({ className = "" }: { className?: string }) => (
-  <span className="inline-flex items-center justify-center">
-    <svg
-      className={`golden-flame-icon ${className}`}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      role="img"
-      aria-hidden="true"
-    >
-      <path
-        d="M12 21c-3.55 0-6.5-2.86-6.5-6.22 0-2.44 1.32-4.04 2.82-5.63 1.25-1.31 2.41-2.7 2.41-4.47 1.73 1.43 3.3 3.45 3.66 5.45 1.57.93 3.11 2.61 3.11 4.94C17.5 18.14 15.08 21 12 21Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M12 17.5c-1.6 0-2.9-1.26-2.9-2.86 0-1.02.54-1.93 1.34-2.68.63-.6 1.2-1.29 1.2-2.27 1.34.97 2.3 2.44 2.3 3.92 0 1.62-1.28 2.89-2.94 2.89Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+const GoldenFlameIcon = ({
+  className = ""
+}: {
+  className?: string;
+}) => <span className="inline-flex items-center justify-center">
+    <svg className={`golden-flame-icon ${className}`} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+      <path d="M12 21c-3.55 0-6.5-2.86-6.5-6.22 0-2.44 1.32-4.04 2.82-5.63 1.25-1.31 2.41-2.7 2.41-4.47 1.73 1.43 3.3 3.45 3.66 5.45 1.57.93 3.11 2.61 3.11 4.94C17.5 18.14 15.08 21 12 21Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 17.5c-1.6 0-2.9-1.26-2.9-2.86 0-1.02.54-1.93 1.34-2.68.63-.6 1.2-1.29 1.2-2.27 1.34.97 2.3 2.44 2.3 3.92 0 1.62-1.28 2.89-2.94 2.89Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-  </span>
-);
-
+  </span>;
 const Index = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  
+
   // Performance logging (dev only)
   usePerformanceLogger();
-
   useEffect(() => {
     // Check if mobile (≤768px)
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-    
+
     // Check prefers-reduced-motion
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
-    
     const handleReducedMotionChange = (e: MediaQueryListEvent) => {
       setPrefersReducedMotion(e.matches);
     };
-    
     checkMobile();
     mediaQuery.addEventListener('change', handleReducedMotionChange);
-    
+
     // Debounced resize handler with requestAnimationFrame batching
     let resizeTimeout: NodeJS.Timeout;
     const handleResize = () => {
@@ -64,9 +42,10 @@ const Index = () => {
         requestAnimationFrame(checkMobile);
       }, 100);
     };
-    
-    window.addEventListener('resize', handleResize, { passive: true });
-    
+    window.addEventListener('resize', handleResize, {
+      passive: true
+    });
+
     // Debounced scroll handler (16ms = 60fps)
     let scrollTimeout: NodeJS.Timeout;
     const handleScroll = () => {
@@ -75,9 +54,9 @@ const Index = () => {
         // Scroll handling logic if needed
       }, 16);
     };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
+    window.addEventListener('scroll', handleScroll, {
+      passive: true
+    });
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', handleScroll);
@@ -86,32 +65,22 @@ const Index = () => {
       if (scrollTimeout) clearTimeout(scrollTimeout);
     };
   }, []);
-
-  return (
-    <div className="min-h-screen relative overflow-hidden">
+  return <div className="min-h-screen relative overflow-hidden">
       {/* Rich Dark Gradient Background with Animated Shimmer */}
       <div className="fixed inset-0 bg-shimmer -z-20" />
       
       {/* Additional depth layers - candle light gradients radiating from center */}
       <div className="fixed inset-0 -z-10">
         {/* Central glow behind menorah area - static on mobile, animated on desktop */}
-        {isMobile ? (
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-radial from-amber/15 via-gold/8 to-transparent opacity-50 mobile-glow-static" />
-        ) : (
-          <div className={`absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-radial from-amber/20 via-gold/10 to-transparent blur-3xl opacity-60 ${!prefersReducedMotion ? 'animate-gentle-pulse' : ''}`} />
-        )}
+        {isMobile ? <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-radial from-amber/15 via-gold/8 to-transparent opacity-50 mobile-glow-static" /> : <div className={`absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-radial from-amber/20 via-gold/10 to-transparent blur-3xl opacity-60 ${!prefersReducedMotion ? 'animate-gentle-pulse' : ''}`} />}
         {/* Secondary warm glows - reduced on mobile */}
-        {isMobile ? (
-          <>
+        {isMobile ? <>
             <div className="absolute top-1/3 left-1/4 w-[500px] h-[400px] bg-gradient-radial from-amber/10 via-transparent to-transparent opacity-25 mobile-glow-static" />
             <div className="absolute top-1/3 right-1/4 w-[500px] h-[400px] bg-gradient-radial from-gold/10 via-transparent to-transparent opacity-25 mobile-glow-static" />
-          </>
-        ) : (
-          <>
+          </> : <>
             <div className="absolute top-1/3 left-1/4 w-[500px] h-[400px] bg-gradient-radial from-amber/15 via-transparent to-transparent blur-3xl opacity-40" />
             <div className="absolute top-1/3 right-1/4 w-[500px] h-[400px] bg-gradient-radial from-gold/15 via-transparent to-transparent blur-3xl opacity-40" />
-          </>
-        )}
+          </>}
         {/* Edge amber warmth */}
         <div className="absolute bottom-0 left-0 right-0 h-[400px] bg-gradient-to-t from-amber/10 via-transparent to-transparent" />
       </div>
@@ -154,14 +123,10 @@ const Index = () => {
         {/* Form Card with Glassmorphism */}
         <div className="relative animate-fade-in animation-delay-200">
           {/* Multiple glow layers behind card for depth - simplified on mobile */}
-          {isMobile ? (
-            <div className="absolute -inset-4 bg-gradient-to-br from-gold/20 via-amber/15 to-gold/15 rounded-3xl opacity-30 mobile-glow-static" />
-          ) : (
-            <>
+          {isMobile ? <div className="absolute -inset-4 bg-gradient-to-br from-gold/20 via-amber/15 to-gold/15 rounded-3xl opacity-30 mobile-glow-static" /> : <>
               <div className={`absolute -inset-6 bg-gradient-to-br from-gold/30 via-amber/20 to-gold/20 rounded-3xl blur-3xl opacity-40 ${!prefersReducedMotion ? 'animate-gentle-pulse' : ''}`} />
               <div className="absolute -inset-4 bg-gradient-to-br from-gold/20 via-amber/15 to-transparent rounded-3xl blur-2xl opacity-30" />
-            </>
-          )}
+            </>}
           
           {/* Main Glass Card */}
           <div className="relative glass-card glass-card-mobile rounded-3xl shadow-2xl shadow-mobile p-8 md:p-12 border border-gold/20">
@@ -184,35 +149,34 @@ const Index = () => {
           {/* Powered by Techrupt */}
           <div className="mb-4">
             <div className="relative inline-block">
-              <p className="text-xl font-semibold tracking-wide" style={{ color: '#FFC670', textShadow: '0 0 12px rgba(255, 200, 100, 0.45)' }}>
+              <p className="text-xl font-semibold tracking-wide" style={{
+              color: '#FFC670',
+              textShadow: '0 0 12px rgba(255, 200, 100, 0.45)'
+            }}>
                 Powered by Techrupt Innovations
               </p>
               {/* Elegant underline accent */}
-              <div className="mx-auto mt-2 w-3/5 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255, 198, 112, 0.4) 50%, transparent)', boxShadow: '0 0 4px rgba(255, 200, 100, 0.3)' }}></div>
+              <div className="mx-auto mt-2 w-3/5 h-px" style={{
+              background: 'linear-gradient(90deg, transparent, rgba(255, 198, 112, 0.4) 50%, transparent)',
+              boxShadow: '0 0 4px rgba(255, 200, 100, 0.3)'
+            }}></div>
             </div>
           </div>
           
           {/* Main message */}
           <p className="text-lg md:text-xl text-gold font-light tracking-wide drop-shadow-[0_0_10px_rgba(255,215,0,0.3)]">
-            May the lights of Chanukah bring warmth and joy to your home🕎
+            May the lights of Chanukah bring warmth and joy to your home
           </p>
           
           {/* Sponsor credit */}
           <p className="text-sm md:text-base font-semibold text-ivory/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] tracking-wide">
             Generously sponsored by Techrupt Innovations. Need tech for your idea?{' '}
-            <a 
-              href="https://docs.google.com/forms/d/e/1FAIpQLSf1d7_AmmXfYFQ1U47oAYKWS-AM_BIbbV-IBUpnCAKhSCo0IQ/viewform?usp=publish-editor"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gold-light hover:underline transition-all duration-200"
-            >
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSf1d7_AmmXfYFQ1U47oAYKWS-AM_BIbbV-IBUpnCAKhSCo0IQ/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" className="text-gold-light hover:underline transition-all duration-200">
               Click here
             </a>.
           </p>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;

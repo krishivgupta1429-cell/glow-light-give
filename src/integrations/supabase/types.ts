@@ -73,10 +73,15 @@ export type Database = {
           full_phone: string | null
           id: string
           is_donor: boolean | null
+          payment_amount_cents: number | null
+          payment_status: string | null
           phone_number: string | null
           reason: string | null
           reason_other: string | null
           sponsorships: string[] | null
+          stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
           verification_sent_at: string | null
           verification_token: string | null
           wants_to_donate: boolean | null
@@ -92,10 +97,15 @@ export type Database = {
           full_phone?: string | null
           id?: string
           is_donor?: boolean | null
+          payment_amount_cents?: number | null
+          payment_status?: string | null
           phone_number?: string | null
           reason?: string | null
           reason_other?: string | null
           sponsorships?: string[] | null
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
           verification_sent_at?: string | null
           verification_token?: string | null
           wants_to_donate?: boolean | null
@@ -111,10 +121,15 @@ export type Database = {
           full_phone?: string | null
           id?: string
           is_donor?: boolean | null
+          payment_amount_cents?: number | null
+          payment_status?: string | null
           phone_number?: string | null
           reason?: string | null
           reason_other?: string | null
           sponsorships?: string[] | null
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
           verification_sent_at?: string | null
           verification_token?: string | null
           wants_to_donate?: boolean | null

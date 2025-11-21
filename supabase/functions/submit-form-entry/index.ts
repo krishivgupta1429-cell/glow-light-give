@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,99 @@ interface SubmitEntryBody {
   wants_to_donate?: boolean;
   verification_token: string;
   verification_sent_at: string;
+}
+
+async function sendRegistrationEmail(fullName: string, email: string): Promise<void> {
+  try {
+    const firstName = fullName.split(' ')[0] || fullName;
+    
+    const htmlBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <p>Hi ${firstName},</p>
+        
+        <p>Thank you so much for signing up for Menorah in the Square—we can't wait to celebrate with you!</p>
+        
+        <p><strong>📍 Location:</strong> Rotary Square<br/>
+        203 S Union St, Traverse City, MI 49684</p>
+        
+        <p><strong>🕔 Event Start Time:</strong> 5:00 PM</p>
+        
+        <p><strong>📅 Date:</strong> December 21st</p>
+        
+        <p>Your participation helps bring warmth and light to our whole community.</p>
+        
+        <p>To help spread the light even further, would you consider forwarding the event sign-up to five friends?</p>
+        
+        <p>Here's the link: <a href="https://menorah.jewishtc.org/">https://menorah.jewishtc.org/</a></p>
+        
+        <p>If you have any questions at all, feel free to reach out anytime.<br/>
+        Looking forward to celebrating together!</p>
+        
+        <p>Warmly,<br/>
+        Rabbi Laibel & Chaya Shemtov<br/>
+        Chabad Jewish Center of Traverse City<br/>
+        <a href="https://JewishTC.org">JewishTC.org</a></p>
+        
+        <p><strong>P.S.</strong> Congratulations on being among the first 100 sign-ups!<br/>
+        Please show this email when you arrive to receive your free beanie.<br/>
+        Be sure to show it before 5:05 PM—after that time, we'll begin giving them out to everyone.</p>
+      </div>
+    `;
+    
+    const textBody = `Hi ${firstName},
+
+Thank you so much for signing up for Menorah in the Square—we can't wait to celebrate with you!
+
+Location: Rotary Square
+203 S Union St, Traverse City, MI 49684
+Event Start Time: 5:00 PM
+Date: December 21st
+
+Your participation helps bring warmth and light to our whole community.
+
+To help spread the light even further, would you consider forwarding the event sign-up to five friends?
+
+Here's the link: https://menorah.jewishtc.org/
+
+If you have any questions at all, feel free to reach out anytime.
+Looking forward to celebrating together!
+
+Warmly,
+Rabbi Laibel & Chaya Shemtov
+Chabad Jewish Center of Traverse City
+JewishTC.org
+
+P.S. Congratulations on being among the first 100 sign-ups!
+Please show this email when you arrive to receive your free beanie.
+Be sure to show it before 5:05 PM—after that time, we'll begin giving them out to everyone.`;
+
+    const client = new SMTPClient({
+      connection: {
+        hostname: Deno.env.get("SMTP_HOST") ?? "",
+        port: Number(Deno.env.get("SMTP_PORT")) || 587,
+        tls: true,
+        auth: {
+          username: Deno.env.get("SMTP_USERNAME") ?? "",
+          password: Deno.env.get("SMTP_PASSWORD") ?? "",
+        },
+      },
+    });
+
+    await client.send({
+      from: "Rabbi Laibel Shemtov <laibelswb@gmail.com>",
+      to: email,
+      replyTo: "laibelswb@gmail.com",
+      subject: "You're Registered for Menorah in the Square!",
+      content: textBody,
+      html: htmlBody,
+    });
+
+    await client.close();
+    console.log(`[submit-form-entry] Registration email sent successfully to ${email}`);
+  } catch (error) {
+    console.error(`[submit-form-entry] Failed to send registration email to ${email}:`, error);
+    // Don't throw - we don't want email failures to block form submission
+  }
 }
 
 serve(async (req) => {
@@ -88,6 +182,11 @@ serve(async (req) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
+
+    // Send registration confirmation email (non-blocking)
+    sendRegistrationEmail(body.full_name, body.email).catch(err => {
+      console.error("[submit-form-entry] Email sending failed but continuing:", err);
+    });
 
     return new Response(JSON.stringify({ id: data.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

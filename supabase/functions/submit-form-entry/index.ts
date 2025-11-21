@@ -36,12 +36,10 @@ async function sendRegistrationEmail(fullName: string, email: string): Promise<v
         
         <p>Thank you so much for signing up for Menorah in the Square—we can't wait to celebrate with you!</p>
         
-        <p><strong>📍 Location:</strong> Rotary Square<br/>
-        203 S Union St, Traverse City, MI 49684</p>
-        
-        <p><strong>🕔 Event Start Time:</strong> 5:00 PM</p>
-        
-        <p><strong>📅 Date:</strong> December 21st</p>
+        <p>📍 <b>Location:</b> Rotary Square<br/>
+        203 S Union St, Traverse City, MI 49684<br/>
+        🕔 <b>Event Start Time:</b> 5:00 PM<br/>
+        📅 <b>Date:</b> December 21st</p>
         
         <p>Your participation helps bring warmth and light to our whole community.</p>
         
@@ -57,7 +55,7 @@ async function sendRegistrationEmail(fullName: string, email: string): Promise<v
         Chabad Jewish Center of Traverse City<br/>
         <a href="https://JewishTC.org">JewishTC.org</a></p>
         
-        <p><strong>P.S.</strong> Congratulations on being among the first 100 sign-ups!<br/>
+        <p><b>P.S.</b> Congratulations on being among the first 100 sign-ups!<br/>
         Please show this email when you arrive to receive your free beanie.<br/>
         Be sure to show it before 5:05 PM—after that time, we'll begin giving them out to everyone.</p>
       </div>

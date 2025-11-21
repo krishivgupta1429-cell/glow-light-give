@@ -28,6 +28,9 @@ interface SubmitEntryBody {
 
 async function sendRegistrationEmail(fullName: string, email: string): Promise<void> {
   try {
+    console.log(`[submit-form-entry] Attempting to send registration email to ${email}`);
+    console.log(`[submit-form-entry] SMTP Config: host=${Deno.env.get("SMTP_HOST")}, port=${Deno.env.get("SMTP_PORT")}, username=${Deno.env.get("SMTP_USERNAME")}`);
+    
     const firstName = fullName.split(' ')[0] || fullName;
     
     const htmlBody = `
@@ -99,6 +102,8 @@ Be sure to show it before 5:05 PM—after that time, we'll begin giving them out
         },
       },
     });
+
+    console.log(`[submit-form-entry] SMTP client configured, sending email...`);
 
     await client.send({
       from: "Rabbi Laibel Shemtov <laibelswb@gmail.com>",

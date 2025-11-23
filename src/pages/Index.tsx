@@ -151,6 +151,11 @@ const Index = () => {
 
         {/* Footer */}
         <div className="mt-16 text-center animate-fade-in space-y-6 py-6 content-offscreen">
+          {/* Location */}
+          <p className="text-lg text-gold font-light tracking-wide drop-shadow-[0_0_10px_rgba(255,215,0,0.3)]">
+            The event will take place at 203 S Union St, Traverse City, MI 49684
+          </p>
+          
           {/* Powered by Techrupt */}
           <div className="mb-4">
             <div className="relative inline-block">

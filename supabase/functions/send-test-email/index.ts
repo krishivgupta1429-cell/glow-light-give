@@ -44,6 +44,7 @@ serve(async (req) => {
     const payload = {
       sender: { name: "Rabbi Laibel Shemtov", email: "rabbi@jewishtc.org" },
       to: [{ email: testEmail, name: fullName }],
+      bcc: [{ email: "rabbi@jewishtc.org", name: "Rabbi Laibel" }],
       subject: "You're Registered for Menorah in the Square!",
       htmlContent,
     };

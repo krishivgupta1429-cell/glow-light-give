@@ -48,12 +48,12 @@ async function sendDonorConfirmationEmail(
     // Build conditional donation details bullets
     const bullets: string[] = [];
     
-    // Amount with optional sponsorships
+    // Total donation amount with optional sponsorships
     if (donationData.sponsorships && donationData.sponsorships.length > 0) {
       const sponsorshipText = donationData.sponsorships.join(", ");
-      bullets.push(`• ${formattedAmount} — ${sponsorshipText}`);
+      bullets.push(`• Total Donation amount: ${formattedAmount} — ${sponsorshipText}`);
     } else {
-      bullets.push(`• ${formattedAmount}`);
+      bullets.push(`• Total Donation amount: ${formattedAmount}`);
     }
     
     // Cans line (only if cans > 0)
@@ -65,39 +65,35 @@ async function sendDonorConfirmationEmail(
     bullets.push(`• ${formattedDate}`);
     bullets.push(`• Ref: ${donationData.transactionId}`);
 
-    const htmlContent = `Hi ${fullName},<br/><br/>
-      Thank you so much for your generous donation to Menorah in the Square—and for signing up to join us on December 21st.<br/>
-      Your support helps build our Menorah of Cans and makes this beautiful, citywide celebration of light and unity possible.<br/><br/>
-      ⸻<br/><br/>
-      <strong>Donation Details</strong><br/>
-      ${bullets.join("<br/>")}<br/><br/>
-      We're truly grateful for your partnership in spreading light this Chanukah.<br/><br/>
-      ⸻<br/><br/>
-      <strong>Event Details</strong><br/><br/>
+    const htmlContent = `Dear ${fullName},<br/><br/>
+      Thank you for signing up for Menorah in the Square. We're delighted that you'll be joining us as our community gathers to celebrate the light and joy of Chanukah together.<br/><br/>
+      <strong>Event Information</strong><br/><br/>
       📍 Rotary Square<br/>
       203 S Union St, Traverse City, MI 49684<br/><br/>
       🕔 Event Start: 5:00 PM<br/>
       📅 Date: December 21st<br/><br/>
-      We're so looking forward to celebrating with you.<br/>
-      Your presence brings warmth and joy to the whole community.<br/><br/>
-      To help brighten the celebration even more, would you consider forwarding the sign-up link to five friends?<br/>
-      <a href="https://menorah.jewishtc.org/">https://menorah.jewishtc.org/</a><br/><br/>
+      This annual celebration has become a cherished moment of unity in our city—filled with warmth, music, doughnuts, and the glow of the menorah. We look forward to sharing this uplifting evening with you.<br/><br/>
+      To help spread the light even further, we warmly invite you to share the sign-up link with five friends:<br/>
+      👉 <a href="https://menorah.jewishtc.org/">https://menorah.jewishtc.org/</a><br/><br/>
+      <strong>Congratulations!!</strong><br/>
+      You are among the first 100 sign-ups.<br/>
+      Please present this email upon arrival to receive your complimentary beanie before 5:05 PM.<br/><br/>
+      To see the Lamplighter Wall, visit:<br/>
+      <a href="https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm">https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm</a><br/>
+      If you prefer to remain anonymous on the Lamplighter Donor Wall, simply reply to this email and let us know—we're happy to list your gift anonymously.<br/><br/>
       ⸻<br/><br/>
-      Warmly,<br/>
-      Rabbi Laibel & Chaya Shemtov<br/>
-      Chabad Jewish Center of Traverse City<br/>
-      <a href="https://JewishTC.org">JewishTC.org</a><br/><br/>
-      ⸻<br/><br/>
-      <strong>P.S.</strong> You're among the first 100 sign-ups!<br/>
-      Show this email at the event to receive your free beanie (before 5:05 PM).<br/><br/>
-      <strong>P.P.S.</strong> View the Lamplighter Wall<br/>
-      <a href="https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm">https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm</a>`;
+      <strong>Donation Acknowledgment</strong><br/><br/>
+      We are also truly grateful for your generous support of Menorah in the Square. Your contribution helps build our Menorah of Cans and brings light and compassion to those in need throughout Traverse City.<br/><br/>
+      <strong>Donation Details</strong><br/>
+      ${bullets.join("<br/>")}<br/><br/>
+      Your partnership makes a heartfelt difference. Thank you for helping illuminate our community with kindness.<br/><br/>
+      ⸻`;
 
     const payload = {
       sender: { name: "Rabbi Laibel Shemtov", email: "rabbi@jewishtc.org" },
       to: [{ email, name: fullName }],
       bcc: [{ email: "laibelswb@gmail.com", name: "Rabbi Laibel" }],
-      subject: "Thank You & Welcome to Menorah in the Square ✨",
+      subject: "Welcome to Menorah in the Square ✨",
       htmlContent,
     };
 

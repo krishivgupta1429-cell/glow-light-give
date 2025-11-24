@@ -48,9 +48,7 @@ serve(async (req) => {
     await client.send({
       from: "rabbi@jewishtc.org",
       to: testEmail,
-      replyTo: "rabbi@jewishtc.org",
       subject: "Test Email - Menorah in the Square",
-      content: `Hi ${firstName}, this is a test email from Menorah in the Square registration system to verify Brevo SMTP delivery.`,
       html: htmlBody,
     });
 

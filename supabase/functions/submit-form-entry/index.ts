@@ -149,10 +149,13 @@ serve(async (req) => {
       );
     }
 
-    // Send registration confirmation email (non-blocking)
-    sendRegistrationEmail(body.full_name, body.email).catch(err => {
-      console.error("[submit-form-entry] Email sending failed but continuing:", err);
-    });
+    // Send registration confirmation email only for NON-donors
+    // Donors will receive their combined email after payment success
+    if (!body.wants_to_donate) {
+      sendRegistrationEmail(body.full_name, body.email).catch(err => {
+        console.error("[submit-form-entry] Email sending failed but continuing:", err);
+      });
+    }
 
     return new Response(JSON.stringify({ id: data.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

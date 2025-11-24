@@ -28,8 +28,8 @@ interface SubmitEntryBody {
 
 async function sendRegistrationEmail(fullName: string, email: string): Promise<void> {
   try {
-    console.log(`[submit-form-entry] Attempting to send registration email to ${email}`);
-    console.log(`[submit-form-entry] SMTP Config: host=${Deno.env.get("SMTP_HOST")}, port=${Deno.env.get("SMTP_PORT")}, username=${Deno.env.get("SMTP_USERNAME")}`);
+    console.log(`[email] Attempting to send registration email to ${email}`);
+    console.log(`[email] SMTP Config: host=${Deno.env.get("SMTP_HOST")}, port=${Deno.env.get("SMTP_PORT")}, username=${Deno.env.get("SMTP_USERNAME")}`);
     
     const firstName = fullName.split(' ')[0] || fullName;
     
@@ -61,6 +61,10 @@ async function sendRegistrationEmail(fullName: string, email: string): Promise<v
         <p><b>P.S.</b> Congratulations on being among the first 100 sign-ups!<br/>
         Please show this email when you arrive to receive your free beanie.<br/>
         Be sure to show it before 5:05 PM—after that time, we'll begin giving them out to everyone.</p>
+        
+        <p><b>P.ss</b><br/>
+        View the lamplighter wall:<br/>
+        <a href="https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm">https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm</a></p>
       </div>
     `;
     
@@ -68,10 +72,10 @@ async function sendRegistrationEmail(fullName: string, email: string): Promise<v
 
 Thank you so much for signing up for Menorah in the Square—we can't wait to celebrate with you!
 
-Location: Rotary Square
+📍 Location: Rotary Square
 203 S Union St, Traverse City, MI 49684
-Event Start Time: 5:00 PM
-Date: December 21st
+🕔 Event Start Time: 5:00 PM
+📅 Date: December 21st
 
 Your participation helps bring warmth and light to our whole community.
 
@@ -89,7 +93,11 @@ JewishTC.org
 
 P.S. Congratulations on being among the first 100 sign-ups!
 Please show this email when you arrive to receive your free beanie.
-Be sure to show it before 5:05 PM—after that time, we'll begin giving them out to everyone.`;
+Be sure to show it before 5:05 PM—after that time, we'll begin giving them out to everyone.
+
+P.ss
+View the lamplighter wall:
+https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm`;
 
     const client = new SMTPClient({
       connection: {
@@ -103,21 +111,21 @@ Be sure to show it before 5:05 PM—after that time, we'll begin giving them out
       },
     });
 
-    console.log(`[submit-form-entry] SMTP client configured, sending email...`);
+    console.log(`[email] SMTP client configured, sending email...`);
 
     await client.send({
-      from: "Rabbi Laibel Shemtov <laibelswb@gmail.com>",
+      from: "rabbi@jewishtc.org",
       to: email,
-      replyTo: "laibelswb@gmail.com",
+      replyTo: "rabbi@jewishtc.org",
       subject: "You're Registered for Menorah in the Square!",
       content: textBody,
       html: htmlBody,
     });
 
     await client.close();
-    console.log(`[submit-form-entry] Registration email sent successfully to ${email}`);
+    console.log(`[email] Sent successfully to ${email}`);
   } catch (error) {
-    console.error(`[submit-form-entry] Failed to send registration email to ${email}:`, error);
+    console.error(`[email] Error: ${error}`);
     // Don't throw - we don't want email failures to block form submission
   }
 }

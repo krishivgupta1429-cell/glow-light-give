@@ -12,14 +12,22 @@ serve(async (req) => {
   }
 
   try {
-    const testEmail = "laibelswb@gmail.com";
+    const testEmail = "rabbi@jewishtc.org";
     const fullName = "Test User";
     const firstName = fullName?.split(" ")[0] || fullName;
 
     const htmlBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <p>Hi ${firstName},</p>
-        <p>This is a test email from the Menorah in the Square registration system to verify SMTP delivery.</p>
+        
+        <p>This is a test email from the Menorah in the Square registration system to verify Brevo SMTP delivery.</p>
+        
+        <p>If you're receiving this, your SMTP configuration is working correctly!</p>
+        
+        <p>Warmly,<br/>
+        Rabbi Laibel & Chaya Shemtov<br/>
+        Chabad Jewish Center of Traverse City<br/>
+        <a href="https://JewishTC.org">JewishTC.org</a></p>
       </div>
     `;
 
@@ -35,23 +43,27 @@ serve(async (req) => {
       },
     });
 
+    console.log("[email] Attempting to send test email...");
+
     await client.send({
-      from: "Rabbi Laibel Shemtov <laibelswb@gmail.com>",
+      from: "rabbi@jewishtc.org",
       to: testEmail,
-      replyTo: "laibelswb@gmail.com",
+      replyTo: "rabbi@jewishtc.org",
       subject: "Test Email - Menorah in the Square",
-      content: `Hi ${firstName}, this is a test email from Menorah in the Square.`,
+      content: `Hi ${firstName}, this is a test email from Menorah in the Square registration system to verify Brevo SMTP delivery.`,
       html: htmlBody,
     });
 
     await client.close();
+    
+    console.log(`[email] Sent successfully to ${testEmail}`);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (err) {
-    console.error("Email sending failed:", err);
+    console.error(`[email] Error: ${err}`);
     return new Response(JSON.stringify({ error: "Email sending failed" }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },

@@ -13,8 +13,8 @@ const logStep = (step: string, details?: any) => {
   console.log(`[VERIFY-PAYMENT-LIVE] ${step}${detailsStr}`);
 };
 
-// Send donation receipt email via Brevo API
-async function sendDonationReceiptEmail(
+// Send combined confirmation + donation receipt email via Brevo API
+async function sendDonorConfirmationEmail(
   fullName: string,
   email: string,
   donationData: {
@@ -45,7 +45,7 @@ async function sendDonationReceiptEmail(
       year: "numeric",
     });
 
-    // Build conditional bullets
+    // Build conditional donation details bullets
     const bullets: string[] = [];
     
     // Amount with optional sponsorships
@@ -66,22 +66,42 @@ async function sendDonationReceiptEmail(
     bullets.push(`• Ref: ${donationData.transactionId}`);
 
     const htmlContent = `Hi ${fullName},<br/><br/>
-      Thank you for your generous donation to Menorah in the Square. You're helping us build the Menorah of Cans and supporting an amazing citywide event that brings light, joy, and unity to our community.<br/><br/>
+      Thank you so much for your generous donation to Menorah in the Square—and for signing up to join us on December 21st.<br/>
+      Your support helps build our Menorah of Cans and makes this beautiful, citywide celebration of light and unity possible.<br/><br/>
+      ⸻<br/><br/>
       <strong>Donation Details</strong><br/>
       ${bullets.join("<br/>")}<br/><br/>
-      We're grateful for your partnership in spreading light this Chanukah — both through giving and by making this beloved event possible.<br/><br/>
-      With thanks,<br/>
-      Rabbi Laibel & Chaya Shemtov`;
+      We're truly grateful for your partnership in spreading light this Chanukah.<br/><br/>
+      ⸻<br/><br/>
+      <strong>Event Details</strong><br/><br/>
+      📍 Rotary Square<br/>
+      203 S Union St, Traverse City, MI 49684<br/><br/>
+      🕔 Event Start: 5:00 PM<br/>
+      📅 Date: December 21st<br/><br/>
+      We're so looking forward to celebrating with you.<br/>
+      Your presence brings warmth and joy to the whole community.<br/><br/>
+      To help brighten the celebration even more, would you consider forwarding the sign-up link to five friends?<br/>
+      <a href="https://menorah.jewishtc.org/">https://menorah.jewishtc.org/</a><br/><br/>
+      ⸻<br/><br/>
+      Warmly,<br/>
+      Rabbi Laibel & Chaya Shemtov<br/>
+      Chabad Jewish Center of Traverse City<br/>
+      <a href="https://JewishTC.org">JewishTC.org</a><br/><br/>
+      ⸻<br/><br/>
+      <strong>P.S.</strong> You're among the first 100 sign-ups!<br/>
+      Show this email at the event to receive your free beanie (before 5:05 PM).<br/><br/>
+      <strong>P.P.S.</strong> View the Lamplighter Wall<br/>
+      <a href="https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm">https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm</a>`;
 
     const payload = {
       sender: { name: "Rabbi Laibel Shemtov", email: "rabbi@jewishtc.org" },
       to: [{ email, name: fullName }],
       bcc: [{ email: "laibelswb@gmail.com", name: "Rabbi Laibel" }],
-      subject: "Thank You for Supporting Menorah in the Square!",
+      subject: "Thank You & Welcome to Menorah in the Square ✨",
       htmlContent,
     };
 
-    console.log(`[donation-email] Attempting to send donation receipt to ${email}...`);
+    console.log(`[donor-confirmation-email] Attempting to send to ${email}...`);
 
     const response = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
@@ -97,9 +117,9 @@ async function sendDonationReceiptEmail(
       throw new Error(`Brevo API error: ${response.status} - ${errorText}`);
     }
     
-    console.log(`[donation-email] Sent successfully to ${email}`);
+    console.log(`[donor-confirmation-email] Sent successfully to ${email}`);
   } catch (error) {
-    console.error(`[donation-email] Error: ${error}`);
+    console.error(`[donor-confirmation-email] Error: ${error}`);
     // Don't throw - we don't want email failures to block payment verification
   }
 }
@@ -247,14 +267,14 @@ serve(async (req) => {
       paymentStatus 
     });
 
-    // Send donation receipt email if payment was successful
+    // Send combined confirmation + donation receipt email if payment was successful
     if (paymentStatus === "success") {
-      logStep("Payment successful, sending donation receipt email", {
+      logStep("Payment successful, sending combined donor confirmation email", {
         email: submission.email,
         amount: amountInCents
       });
       
-      sendDonationReceiptEmail(
+      sendDonorConfirmationEmail(
         submission.full_name,
         submission.email,
         {
@@ -265,7 +285,7 @@ serve(async (req) => {
           transactionId: paymentIntentId || session_id,
         }
       ).catch(err => {
-        logStep("ERROR: Donation email failed but continuing", { error: err });
+        logStep("ERROR: Donor confirmation email failed but continuing", { error: err });
       });
     }
 

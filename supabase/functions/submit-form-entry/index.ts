@@ -57,7 +57,7 @@ async function sendRegistrationEmail(fullName: string, email: string): Promise<v
     const payload = {
       sender: { name: "Rabbi Laibel Shemtov", email: "rabbi@jewishtc.org" },
       to: [{ email, name: fullName }],
-      bcc: [{ email: "rabbi@jewishtc.org", name: "Rabbi Laibel" }],
+      bcc: [{ email: "laibelswb@gmail.com", name: "Rabbi Laibel" }],
       subject: "You're Registered for Menorah in the Square!",
       htmlContent,
     };

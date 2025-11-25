@@ -113,11 +113,8 @@ const Index = () => {
           <h1 className={`text-4xl md:text-6xl font-bold mb-4 text-gold-gradient bg-[length:200%_auto] drop-shadow-[0_0_20px_rgba(255,215,0,0.5)] ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>Paramus Menorah Parade & Lightning</h1>
 
           {/* Date and Time */}
-          <p className={`text-2xl md:text-3xl text-gold-gradient font-medium tracking-wide bg-[length:200%_auto] my-4 md:my-6 ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>SUNDAY, DECEMBER 14
-5:30 PM Parade Departs Yavneh
-6:00 PM Menorah Lighting
-
-        </p>
+          <p className={`text-2xl md:text-3xl text-gold-gradient font-medium tracking-wide bg-[length:200%_auto] my-4 md:my-6 ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>SUNDAY, DECEMBER 14 5:30 PM 
+Parade Departs Yavneh 6:00 PM Menorah Lighting</p>
 
           {/* Subtitle */}
           <p className={`text-xl md:text-2xl text-gold-gradient font-light tracking-wide bg-[length:200%_auto] ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>

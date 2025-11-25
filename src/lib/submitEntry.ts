@@ -10,9 +10,9 @@ export interface MenorahEntryData {
   numberOfChildren: string;
   enjoyReason: string;
   otherEnjoyReason?: string;
+  driveInParade?: string;
+  carMenorahPreference?: string;
   sponsorships: string[];
-  cansQuantity: string;
-  comments?: string;
   emailUpdatesOptIn: boolean;
 }
 
@@ -93,28 +93,7 @@ export async function submitEntry(
       { id: "menorah-platinum", label: "MENORAH PLATINUM SPONSOR", amount: 540 },
     ];
 
-    const wantsToDonate = formData.sponsorships.length > 0 || formData.cansQuantity !== "";
-
-    // Calculate cans amount
-    const canOptions = [
-      { quantity: 1, label: "1 CAN – $4", amount: 4 },
-      { quantity: 2, label: "2 CAN – $8", amount: 8 },
-      { quantity: 4, label: "4 CANS – $16", amount: 16 },
-      { quantity: 6, label: "6 CANS – $24", amount: 24 },
-      { quantity: 8, label: "8 CANS – $32", amount: 32 },
-      { quantity: 10, label: "10 CANS – $40", amount: 40 },
-      { quantity: 15, label: "15 CANS – $60", amount: 60 },
-      { quantity: 20, label: "20 CANS – $80", amount: 80 },
-      { quantity: 30, label: "30 CANS – $120", amount: 120 },
-      { quantity: 40, label: "40 CANS – $160", amount: 160 },
-      { quantity: 50, label: "50 CANS – $200", amount: 200 },
-      { quantity: 100, label: "100 CANS – $400", amount: 400 },
-    ];
-
-    const selectedCanOption = canOptions.find(
-      (option) => option.label === formData.cansQuantity
-    );
-    const cansQuantityValue = selectedCanOption?.quantity || 0;
+    const wantsToDonate = formData.sponsorships.length > 0;
 
     // Generate verification token
     const verificationToken = generateVerificationToken();
@@ -137,9 +116,9 @@ export async function submitEntry(
       number_of_children: formData.numberOfChildren ? parseInt(formData.numberOfChildren, 10) : 0,
       reason: formData.enjoyReason,
       reason_other: formData.otherEnjoyReason?.trim() || null,
+      drive_in_parade: formData.driveInParade || null,
+      car_menorah_preference: formData.carMenorahPreference || null,
       sponsorships: formData.sponsorships,
-      cans_quantity: cansQuantityValue,
-      comments: formData.comments?.trim() || null,
       email_updates_opt_in: formData.emailUpdatesOptIn,
       wants_to_donate: wantsToDonate,
       verification_token: verificationToken,

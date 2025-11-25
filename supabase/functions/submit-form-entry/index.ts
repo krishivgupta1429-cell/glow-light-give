@@ -16,9 +16,9 @@ interface SubmitEntryBody {
   number_of_children?: number;
   reason: string;
   reason_other?: string | null;
+  drive_in_parade?: string | null;
+  car_menorah_preference?: string | null;
   sponsorships: string[];
-  cans_quantity: number;
-  comments?: string | null;
   email_updates_opt_in?: boolean;
   wants_to_donate?: boolean;
   verification_token: string;
@@ -45,7 +45,7 @@ async function sendRegistrationEmail(fullName: string, email: string): Promise<v
       Looking forward to celebrating together!<br/><br/>
       Warmly,<br/>
       Rabbi Laibel & Chaya Shemtov<br/>
-      Chabad Jewish Center of Traverse City<br/>
+      Chabad of Paramus<br/>
       <a href="https://JewishTC.org">JewishTC.org</a><br/><br/>
       <strong>P.S.</strong> Congratulations on being among the first 100 sign-ups!<br/>
       Please show this email when you arrive to receive your free beanie.<br/>
@@ -125,9 +125,9 @@ serve(async (req) => {
       number_of_children: body.number_of_children ?? 0,
       reason: body.reason,
       reason_other: body.reason_other?.trim() ?? null,
+      drive_in_parade: body.drive_in_parade?.trim() || null,
+      car_menorah_preference: body.car_menorah_preference?.trim() || null,
       sponsorships: body.sponsorships ?? [],
-      cans_quantity: body.cans_quantity ?? 0,
-      comments: body.comments?.trim() ?? null,
       email_updates_opt_in: body.email_updates_opt_in ?? false,
       wants_to_donate: body.wants_to_donate ?? false,
       verification_token: body.verification_token,

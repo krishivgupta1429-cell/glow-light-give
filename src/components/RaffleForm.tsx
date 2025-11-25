@@ -27,9 +27,9 @@ const RaffleForm = () => {
     numberOfChildren: "",
     reason: "",
     otherReason: "",
+    driveInParade: "",
+    carMenorahPreference: "",
     sponsorships: [] as string[],
-    cansQuantity: "",
-    comments: "",
     emailUpdatesOptIn: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,29 +48,6 @@ const RaffleForm = () => {
   // Get current format based on area code
   const currentFormat = phoneFormats[formData.areaCode] || { placeholder: 'Phone number', digits: 15 };
 
-  // Can options with quantities and amounts
-  const canOptions = [
-    { quantity: 0, label: "0 CANS – $0", amount: 0 },
-    { quantity: 1, label: "1 CAN – $4", amount: 4 },
-    { quantity: 2, label: "2 CAN – $8", amount: 8 },
-    { quantity: 4, label: "4 CANS – $16", amount: 16 },
-    { quantity: 6, label: "6 CANS – $24", amount: 24 },
-    { quantity: 8, label: "8 CANS – $32", amount: 32 },
-    { quantity: 10, label: "10 CANS – $40", amount: 40 },
-    { quantity: 15, label: "15 CANS – $60", amount: 60 },
-    { quantity: 20, label: "20 CANS – $80", amount: 80 },
-    { quantity: 30, label: "30 CANS – $120", amount: 120 },
-    { quantity: 40, label: "40 CANS – $160", amount: 160 },
-    { quantity: 50, label: "50 CANS – $200", amount: 200 },
-    { quantity: 100, label: "100 CANS – $400", amount: 400 },
-  ];
-
-  // Get selected can option details
-  const selectedCanOption = canOptions.find(
-    (option) => option.label === formData.cansQuantity
-  );
-  const cansQuantity = selectedCanOption?.quantity || 0;
-  const cansAmountUsd = selectedCanOption?.amount || 0;
 
   // Sponsorship options with amounts
   const sponsorshipOptions = [
@@ -279,12 +256,27 @@ const RaffleForm = () => {
       return;
     }
 
+    // Validate Menorah Parade questions
+    if (!formData.driveInParade || formData.driveInParade.trim() === "") {
+      toast.error("Please answer the parade question", {
+        description: "Please indicate whether you would like to drive your car in the Menorah Parade.",
+      });
+      return;
+    }
+
+    if (!formData.carMenorahPreference || formData.carMenorahPreference.trim() === "") {
+      toast.error("Please answer the car menorah question", {
+        description: "Please indicate whether you will have your own car menorah or borrow from Chabad.",
+      });
+      return;
+    }
+
     // Set submitting state
     setIsSubmitting(true);
 
     try {
       // Check if user has sponsorships (wants to donate)
-      const hasSponsorships = formData.sponsorships.length > 0 || formData.cansQuantity !== "";
+      const hasSponsorships = formData.sponsorships.length > 0;
       
       if (hasSponsorships) {
         // STRIPE PAYMENT FLOW
@@ -298,9 +290,9 @@ const RaffleForm = () => {
           numberOfChildren: formData.numberOfChildren,
           enjoyReason: formData.reason,
           otherEnjoyReason: formData.otherReason,
+          driveInParade: formData.driveInParade,
+          carMenorahPreference: formData.carMenorahPreference,
           sponsorships: formData.sponsorships,
-          cansQuantity: formData.cansQuantity,
-          comments: formData.comments,
           emailUpdatesOptIn: formData.emailUpdatesOptIn,
         });
 
@@ -312,7 +304,7 @@ const RaffleForm = () => {
         }
 
         // Calculate total amount
-        const totalAmount = sponsorshipTotal + cansAmountUsd;
+        const totalAmount = sponsorshipTotal;
 
         // Create Stripe checkout session
         const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke(
@@ -348,9 +340,9 @@ const RaffleForm = () => {
           numberOfChildren: formData.numberOfChildren,
           enjoyReason: formData.reason,
           otherEnjoyReason: formData.otherReason,
+          driveInParade: formData.driveInParade,
+          carMenorahPreference: formData.carMenorahPreference,
           sponsorships: formData.sponsorships,
-          cansQuantity: formData.cansQuantity,
-          comments: formData.comments,
           emailUpdatesOptIn: formData.emailUpdatesOptIn,
         });
 
@@ -369,9 +361,9 @@ const RaffleForm = () => {
             numberOfChildren: "",
             reason: "",
             otherReason: "",
+            driveInParade: "",
+            carMenorahPreference: "",
             sponsorships: [],
-            cansQuantity: "",
-            comments: "",
             emailUpdatesOptIn: false,
           });
           setEmailError("");
@@ -615,6 +607,66 @@ const RaffleForm = () => {
           <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
         </div>
 
+        {/* Menorah Parade Section */}
+        <div className="space-y-4">
+          {/* Question 1: Drive in Parade */}
+          <div className="space-y-3">
+            <Label className="text-foreground font-medium text-base">
+              Would you like to drive your car in the Menorah Parade? <span className="text-gold">*</span>
+            </Label>
+            <RadioGroup
+              value={formData.driveInParade}
+              onValueChange={(value) => setFormData({ ...formData, driveInParade: value })}
+              className="space-y-2"
+            >
+              <Label htmlFor="drive-yes" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+                <RadioGroupItem value="yes" id="drive-yes" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+                <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
+                  Yes
+                </span>
+              </Label>
+              <Label htmlFor="drive-no" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+                <RadioGroupItem value="no" id="drive-no" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+                <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
+                  No
+                </span>
+              </Label>
+            </RadioGroup>
+          </div>
+
+          {/* Question 2: Car Menorah Preference */}
+          <div className="space-y-3">
+            <Label className="text-foreground font-medium text-base">
+              Do you have your own car menorah or will you borrow from Chabad? <span className="text-gold">*</span>
+            </Label>
+            <RadioGroup
+              value={formData.carMenorahPreference}
+              onValueChange={(value) => setFormData({ ...formData, carMenorahPreference: value })}
+              className="space-y-2"
+            >
+              <Label htmlFor="menorah-own" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+                <RadioGroupItem value="own" id="menorah-own" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+                <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
+                  I will have my own car menorah
+                </span>
+              </Label>
+              <Label htmlFor="menorah-borrow" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+                <RadioGroupItem value="borrow" id="menorah-borrow" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+                <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
+                  I will borrow from Chabad
+                </span>
+              </Label>
+            </RadioGroup>
+          </div>
+        </div>
+
+        {/* Separator */}
+        <div className="flex items-center justify-center py-4">
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+          <div className="mx-4 text-2xl animate-candle-flicker">✨</div>
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+        </div>
+
         {/* Support */}
         <div className="space-y-4">
           {/* Intro line */}
@@ -677,7 +729,7 @@ const RaffleForm = () => {
               <div className="flex items-center justify-between pt-4 mt-4 border-t border-gold/30">
                 <span className="text-foreground font-semibold text-base md:text-lg">Total Charge</span>
                 <span className="text-gold font-bold text-lg md:text-xl">
-                  ${(sponsorshipTotal + cansAmountUsd).toFixed(2)} USD
+                  ${sponsorshipTotal.toFixed(2)} USD
                 </span>
               </div>
               
@@ -696,122 +748,6 @@ const RaffleForm = () => {
                 value={sponsorshipTotal.toFixed(2)}
               />
             </div>
-        </div>
-
-        {/* Separator */}
-        <div className="flex items-center justify-center py-4">
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-          <div className="mx-4 text-2xl animate-candle-flicker">✨</div>
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-        </div>
-
-        {/* Informational card - static, non-interactive */}
-        <div className="space-y-4 bg-gradient-to-br from-purple-900/20 via-purple-800/15 to-gold/10 p-6 rounded-xl border border-purple-500/30 backdrop-blur-sm relative overflow-hidden">
-          {/* Subtle glow effect with purple accent */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-gold/5 pointer-events-none" />
-          {/* Header bar effect */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500/50 via-purple-400/40 to-gold/30" />
-          <div className="relative z-10 space-y-3">
-            {/* Heading */}
-            <h3 className="text-base font-semibold text-gold leading-tight flex items-center gap-2">
-              <span className="text-lg">🥫</span>
-              <span>Help Build a Menorah Out of Cans and Support Those in Need!</span>
-            </h3>
-            
-            {/* Body content */}
-            <div className="space-y-2 text-sm text-foreground/80 leading-relaxed">
-              <p>
-                This year, we're building a menorah entirely out of canned food, which will later be donated to local homeless shelters. You can participate in this meaningful project in two ways:
-              </p>
-              <ol className="list-decimal list-inside space-y-1.5 ml-2">
-                <li>Drop off cans at the Chabad JCC.</li>
-                <li>Have us do the shopping for you! And simply select how many cans you'd like to contribute. Each can costs an average of $4.</li>
-              </ol>
-            </div>
-            
-            {/* Closing line - smaller, italic */}
-            <p className="text-xs text-foreground/70 italic leading-relaxed">
-              Each can become a building block of hope, turning our celebration into a beacon of giving.
-            </p>
-          </div>
-        </div>
-
-        {/* Glowing Divider Separator */}
-        <div className="flex items-center justify-center py-6 md:py-8 my-4 md:my-6">
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
-          <div className="mx-4 text-2xl animate-candle-flicker">✨</div>
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
-        </div>
-
-        {/* Can Quantity Selector */}
-        <div className="space-y-3">
-          <div className="relative">
-            <Label 
-              htmlFor="cansQuantity" 
-              className="text-foreground font-bold text-lg md:text-xl block relative pb-2"
-            >
-              <span className="relative z-10 drop-shadow-[0_0_8px_rgba(255,215,0,0.3)]">How many cans would you like us to shop for you?</span>
-              {/* Golden underline/highlight effect */}
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-gold/60 to-transparent opacity-70 animate-pulse" />
-              <span className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent shadow-[0_0_6px_rgba(255,215,0,0.4)]" />
-            </Label>
-          </div>
-          <Select
-            value={formData.cansQuantity}
-            onValueChange={(value) => setFormData({ ...formData, cansQuantity: value })}
-          >
-            <SelectTrigger
-              id="cansQuantity"
-              aria-label="Select quantity of cans"
-              className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)]"
-            >
-              <SelectValue placeholder="Select quantity" />
-            </SelectTrigger>
-            <SelectContent className="bg-card/95 backdrop-blur-md border-border/60 text-foreground shadow-lg mobile-select-content">
-              {canOptions.map((option) => (
-                <SelectItem
-                  key={option.quantity}
-                  value={option.label}
-                  className="text-foreground focus:bg-gold/10 focus:text-gold hover:bg-gold/5 cursor-pointer transition-colors"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {/* Helper line */}
-          <p className="text-xs text-foreground/60 mt-2">
-            We'll purchase and deliver the cans on your behalf for the menorah construction.
-          </p>
-          
-          {/* Hidden inputs for form submission */}
-          <input
-            type="hidden"
-            name="cans_quantity"
-            value={cansQuantity}
-          />
-          <input
-            type="hidden"
-            name="cans_amount_usd"
-            value={cansAmountUsd.toFixed(2)}
-          />
-        </div>
-
-        {/* Comments / Special Requests */}
-        <div className="space-y-2">
-          <Label htmlFor="comments" className="text-foreground font-medium text-base">
-            Comments or Special Requests
-          </Label>
-          <Textarea
-            id="comments"
-            name="comments"
-            placeholder="Share your thoughts or any special requests…"
-            value={formData.comments}
-            onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
-            className="bg-input/80 backdrop-blur-sm border-border/60 text-foreground placeholder:text-foreground/50 focus:border-gold focus:ring-2 focus:ring-gold/40 transition-all duration-300 hover:border-gold/60 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] min-h-[100px] resize-y"
-            aria-label="Comments or special requests"
-          />
         </div>
 
         {/* Lamplighter Wall Button */}
@@ -843,7 +779,7 @@ const RaffleForm = () => {
               htmlFor="emailUpdatesOptIn"
               className="font-normal cursor-pointer text-foreground/90 group-hover:text-gold transition-colors duration-200 text-sm leading-relaxed"
               >
-              Yes, I would like to receive email updates about future Chabad Traverse City events and programs
+              Yes, I would like to receive email updates about future Chabad of Paramus events and programs
               </Label>
           </div>
         </div>
@@ -859,7 +795,7 @@ const RaffleForm = () => {
           <span className="relative z-10">
             {isSubmitting 
               ? "Processing..." 
-              : (formData.sponsorships.length > 0 || formData.cansQuantity !== "") 
+              : formData.sponsorships.length > 0
                 ? "Pay Now" 
                 : "Submit Entry"
             }

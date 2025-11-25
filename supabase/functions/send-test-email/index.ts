@@ -32,7 +32,7 @@ serve(async (req) => {
       Looking forward to celebrating together!<br/><br/>
       Warmly,<br/>
       Rabbi Laibel & Chaya Shemtov<br/>
-      Chabad Jewish Center of Traverse City<br/>
+      Chabad of Paramus<br/>
       <a href="https://JewishTC.org">JewishTC.org</a><br/><br/>
       <strong>P.S.</strong> Congratulations on being among the first 100 sign-ups!<br/>
       Please show this email when you arrive to receive your free beanie.<br/>

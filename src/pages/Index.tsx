@@ -94,7 +94,7 @@ const Index = () => {
         <div className="text-center mb-6 animate-fade-in">
           <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-gradient-to-r from-gold/10 via-amber/10 to-gold/10 border border-gold/30 backdrop-blur-sm">
             <GoldenFlameIcon className="w-5 h-5 md:w-6 md:h-6" />
-            <span className="text-sm font-medium text-foreground/90 tracking-wider">HOSTED BY CHABAD OF PARARMUS</span>
+            <span className="text-sm font-medium text-foreground/90 tracking-wider">HOSTED BY CHABAD OF PARAMUS</span>
             <GoldenFlameIcon className="w-5 h-5 md:w-6 md:h-6" />
           </div>
         </div>
@@ -110,19 +110,18 @@ const Index = () => {
           </div>
 
           {/* Title with Golden Gradient */}
-          <h1 className={`text-4xl md:text-6xl font-bold mb-4 text-gold-gradient bg-[length:200%_auto] drop-shadow-[0_0_20px_rgba(255,215,0,0.5)] ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>
-            Menorah in The Square
-          </h1>
+          <h1 className={`text-4xl md:text-6xl font-bold mb-4 text-gold-gradient bg-[length:200%_auto] drop-shadow-[0_0_20px_rgba(255,215,0,0.5)] ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>Paramus Menorah Parade & Lightning</h1>
 
           {/* Date and Time */}
-          <p className={`text-2xl md:text-3xl text-gold-gradient font-medium tracking-wide bg-[length:200%_auto] my-4 md:my-6 ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>
-            Dec 21 • 5:00 pm
-          </p>
+          <p className={`text-2xl md:text-3xl text-gold-gradient font-medium tracking-wide bg-[length:200%_auto] my-4 md:my-6 ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>SUNDAY, DECEMBER 14
+5:30 PM Parade Departs Yavneh
+6:00 PM Menorah Lighting
+
+        </p>
 
           {/* Subtitle */}
           <p className={`text-xl md:text-2xl text-gold-gradient font-light tracking-wide bg-[length:200%_auto] ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>
-            Together We Light the Square.
-          </p>
+        </p>
         </div>
 
         {/* Form Card with Glassmorphism */}

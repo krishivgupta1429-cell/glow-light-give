@@ -632,6 +632,18 @@ const RaffleForm = () => {
                 </span>
               </Label>
             </RadioGroup>
+            {/* Conditional info box when "Yes" is selected */}
+            {formData.driveInParade === "yes" && (
+              <div className="mt-3 animate-fade-in">
+                <div className="bg-input/80 backdrop-blur-sm border-border/60 rounded-md border text-foreground">
+                  <div className="flex items-center px-3 py-2.5 min-h-[44px]">
+                    <span className="text-base font-normal text-foreground/90">
+                      Parade will stage at Yavneh Academy at 5:00 PM
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Question 2: Car Menorah Preference */}
@@ -748,19 +760,6 @@ const RaffleForm = () => {
                 value={sponsorshipTotal.toFixed(2)}
               />
             </div>
-        </div>
-
-        {/* Lamplighter Wall Button */}
-        <div className="flex justify-center pt-4 mt-4 border-t border-gold/20">
-          <button
-            type="button"
-            className="px-6 py-2.5 rounded-full bg-gradient-to-r from-gold/20 via-amber/15 to-gold/20 border border-gold/40 text-gold font-medium hover:opacity-90 hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] transition-all duration-200 active:scale-95 relative overflow-hidden"
-            onClick={() => {
-              window.open('https://www.jewishtc.org/templates/articlecco_cdo/aid/7109138/jewish/Untitled.htm', '_blank');
-            }}
-          >
-            <span className="relative z-10">View the Lamplighter Wall</span>
-          </button>
         </div>
 
         {/* Email Updates Opt-in */}

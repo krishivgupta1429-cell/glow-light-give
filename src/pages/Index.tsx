@@ -114,9 +114,12 @@ const Index = () => {
 
           {/* Date and Time */}
           <p className={`text-2xl md:text-3xl text-gold-gradient font-medium tracking-wide bg-[length:200%_auto] my-4 md:my-6 text-center ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>
-            SUNDAY, DECEMBER 14<br />
-            5:30 PM Parade Departs Yavneh<br />
-            6:00 PM Menorah Lighting
+            Sunday, December 14<br />
+            5:30 PM Parade departs Yavneh Academy<br />
+            155 N. Farview Ave, Paramus<br />
+            <a href="#" className="cursor-pointer transition-all duration-200 underline font-normal italic" style={{ color: '#FFFFFF', fontWeight: 400 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.textShadow = '0 0 8px rgba(255,255,255,0.6)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.textShadow = 'none'; }}>Click to see parade route</a><br />
+            6:00 PM Grand Menorah Lighting<br />
+            Paramus Borough Hall, 1 Jockish Sq, Paramus
           </p>
 
           {/* Subtitle */}
@@ -152,7 +155,9 @@ const Index = () => {
         <div className="mt-16 text-center animate-fade-in space-y-6 py-6 content-offscreen">
           {/* Location */}
           <p className="text-lg text-gold font-light tracking-wide drop-shadow-[0_0_10px_rgba(255,215,0,0.3)]">
-            The event will take place at 203 S Union St, Traverse City, MI 49684
+            This event will take place at<br />
+            <span className="font-medium">Paramus Borough Hall</span><br />
+            <span className="font-medium">1 Jockish Sq, Paramus</span>
           </p>
           
           {/* Powered by Techrupt */}

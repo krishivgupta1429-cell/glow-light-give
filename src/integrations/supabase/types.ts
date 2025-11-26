@@ -64,9 +64,9 @@ export type Database = {
       form_submissions: {
         Row: {
           area_code: string | null
-          cans_quantity: number | null
-          comments: string | null
+          car_menorah_preference: string | null
           created_at: string
+          drive_in_parade: string | null
           email: string
           email_updates_opt_in: boolean | null
           full_name: string
@@ -90,9 +90,9 @@ export type Database = {
         }
         Insert: {
           area_code?: string | null
-          cans_quantity?: number | null
-          comments?: string | null
+          car_menorah_preference?: string | null
           created_at?: string
+          drive_in_parade?: string | null
           email: string
           email_updates_opt_in?: boolean | null
           full_name: string
@@ -116,9 +116,9 @@ export type Database = {
         }
         Update: {
           area_code?: string | null
-          cans_quantity?: number | null
-          comments?: string | null
+          car_menorah_preference?: string | null
           created_at?: string
+          drive_in_parade?: string | null
           email?: string
           email_updates_opt_in?: boolean | null
           full_name?: string

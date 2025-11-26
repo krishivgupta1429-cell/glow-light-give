@@ -110,7 +110,12 @@ const Index = () => {
           </div>
 
           {/* Title with Golden Gradient */}
-          <h1 className={`text-4xl md:text-6xl font-bold mb-4 text-gold-gradient bg-[length:200%_auto] drop-shadow-[0_0_20px_rgba(255,215,0,0.5)] ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>Paramus Menorah Parade & Lightning</h1>
+          <h1 className={`text-4xl md:text-6xl font-bold mb-3 text-gold-gradient bg-[length:200%_auto] drop-shadow-[0_0_20px_rgba(255,215,0,0.5)] ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>Paramus Menorah Parade & Lightning</h1>
+
+          {/* Sub-heading */}
+          <p className={`text-sm md:text-base font-semibold text-gold/85 tracking-wide mb-5 text-center drop-shadow-[0_0_8px_rgba(255,215,0,0.25)]`}>
+            4th Annual Menorah Parade | Grand Menorah Lighting | Mystery Jug Hunt | Chocolate Gelt Drop | Giant Maccabee | Donuts and Hot Cocoa/Cider
+          </p>
 
           {/* Date and Time */}
           <p className={`text-2xl md:text-3xl text-gold-gradient font-medium tracking-wide bg-[length:200%_auto] my-4 md:my-6 text-center ${!isMobile && !prefersReducedMotion ? 'animate-shimmer' : ''}`}>
@@ -131,7 +136,25 @@ const Index = () => {
               Click to see parade route
             </a><br />
             6:00 PM Grand Menorah Lighting<br />
-            Paramus Borough Hall, 1 Jockish Sq, Paramus
+            Paramus Borough Hall, 1 Jockish Sq, Paramus<br />
+            <a
+              href="https://www.instagram.com/reel/DEWTltsNT5G/?igsh=MXV6aTc0am9xYWQy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-4 mb-2 text-white italic underline cursor-pointer transition-all duration-200 hover:text-white hover:decoration-2"
+              style={{
+                fontSize: '1.25rem',
+                textShadow: '0 0 10px rgba(255,255,255,0.5), 0 0 20px rgba(255,255,255,0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.textShadow = '0 0 15px rgba(255,255,255,0.7), 0 0 30px rgba(255,255,255,0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.textShadow = '0 0 10px rgba(255,255,255,0.5), 0 0 20px rgba(255,255,255,0.3)';
+              }}
+            >
+              Click here to watch last year's recap!
+            </a>
           </p>
 
           {/* Subtitle */}

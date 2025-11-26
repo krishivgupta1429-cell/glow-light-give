@@ -117,7 +117,15 @@ const Index = () => {
             Sunday, December 14<br />
             5:30 PM Parade departs Yavneh Academy<br />
             155 N. Farview Ave, Paramus<br />
-            <a href="#" className="cursor-pointer transition-all duration-200 underline font-normal italic" style={{ color: '#FFFFFF', fontWeight: 400 }} onMouseEnter={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.textShadow = '0 0 8px rgba(255,255,255,0.6)'; }} onMouseLeave={(e) => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.textShadow = 'none'; }}>Click to see parade route</a><br />
+            <a 
+              href="/assets/parade-route.png" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="parade-route-link cursor-pointer transition-all duration-200 underline font-normal italic hover:brightness-110" 
+              style={{ color: '#FFFFFF', fontWeight: 400 }}
+            >
+              Click to see parade route
+            </a><br />
             6:00 PM Grand Menorah Lighting<br />
             Paramus Borough Hall, 1 Jockish Sq, Paramus
           </p>

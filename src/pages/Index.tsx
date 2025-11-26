@@ -121,8 +121,12 @@ const Index = () => {
               href="/assets/parade-route.png" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="parade-route-link cursor-pointer transition-all duration-200 underline font-normal italic hover:brightness-110" 
-              style={{ color: '#FFFFFF', fontWeight: 400 }}
+              className="parade-route-link inline-block my-2 cursor-pointer transition-all duration-200 underline font-normal italic hover:text-[#EDEDED]" 
+              style={{ 
+                color: '#FFFFFF', 
+                fontWeight: 400,
+                textShadow: '0 0 8px rgba(255, 255, 255, 0.4)'
+              }}
             >
               Click to see parade route
             </a><br />

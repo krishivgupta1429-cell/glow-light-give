@@ -291,13 +291,9 @@ const RaffleForm = () => {
     }
 
     // Validate Menorah Parade questions
-    if (!formData.driveInParade || formData.driveInParade.trim() === "") {
-      toast.error("Please answer the parade question", {
-        description: "Please indicate whether you would like to drive your car in the Menorah Parade."
-      });
-      return;
-    }
-    if (!formData.carMenorahPreference || formData.carMenorahPreference.trim() === "") {
+    // First question (driveInParade) is now optional
+    // Second question (carMenorahPreference) is required only when driveInParade === "yes"
+    if (formData.driveInParade === "yes" && (!formData.carMenorahPreference || formData.carMenorahPreference.trim() === "")) {
       toast.error("Please answer the car menorah question", {
         description: "Please indicate whether you will have your own car menorah or borrow from Chabad."
       });
@@ -575,15 +571,26 @@ const RaffleForm = () => {
 
         {/* Menorah Parade Section */}
         <div className="space-y-4">
-          {/* Question 1: Drive in Parade */}
+          {/* Question 1: Drive in Parade (Optional) */}
           <div className="space-y-3">
             <Label className="text-foreground font-medium text-base">
-              Would you like to drive your car in the Menorah Parade? <span className="text-gold">*</span>
+              Would you like to drive your car in the Menorah Parade?
             </Label>
-            <RadioGroup value={formData.driveInParade} onValueChange={value => setFormData({
-            ...formData,
-            driveInParade: value
-          })} className="space-y-2">
+            <RadioGroup value={formData.driveInParade} onValueChange={value => {
+              // Clear carMenorahPreference when switching away from "yes"
+              if (value !== "yes") {
+                setFormData({
+                  ...formData,
+                  driveInParade: value,
+                  carMenorahPreference: ""
+                });
+              } else {
+                setFormData({
+                  ...formData,
+                  driveInParade: value
+                });
+              }
+            }} className="space-y-2">
               <Label htmlFor="drive-yes" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
                 <RadioGroupItem value="yes" id="drive-yes" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
                 <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
@@ -609,29 +616,31 @@ const RaffleForm = () => {
               </div>}
           </div>
 
-          {/* Question 2: Car Menorah Preference */}
-          <div className="space-y-3">
-            <Label className="text-foreground font-medium text-base">
-              Do you have your own car menorah or will you borrow from Chabad? <span className="text-gold">*</span>
-            </Label>
-            <RadioGroup value={formData.carMenorahPreference} onValueChange={value => setFormData({
-            ...formData,
-            carMenorahPreference: value
-          })} className="space-y-2">
-              <Label htmlFor="menorah-own" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
-                <RadioGroupItem value="own" id="menorah-own" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
-                <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
-                  I will have my own car menorah
-                </span>
+          {/* Question 2: Car Menorah Preference - Only shown when driveInParade === "yes" */}
+          {formData.driveInParade === "yes" && (
+            <div className="space-y-3 animate-fade-in">
+              <Label className="text-foreground font-medium text-base">
+                Do you have your own car menorah or will you borrow from Chabad? <span className="text-gold">*</span>
               </Label>
-              <Label htmlFor="menorah-borrow" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
-                <RadioGroupItem value="borrow" id="menorah-borrow" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
-                <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
-                  I will borrow from Chabad
-                </span>
-              </Label>
-            </RadioGroup>
-          </div>
+              <RadioGroup value={formData.carMenorahPreference} onValueChange={value => setFormData({
+              ...formData,
+              carMenorahPreference: value
+            })} className="space-y-2">
+                <Label htmlFor="menorah-own" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+                  <RadioGroupItem value="own" id="menorah-own" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+                  <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
+                    I will have my own car menorah
+                  </span>
+                </Label>
+                <Label htmlFor="menorah-borrow" className="flex items-center gap-3 min-h-[44px] group px-2 py-2 rounded-lg hover:bg-gold/5 transition-colors duration-200 cursor-pointer">
+                  <RadioGroupItem value="borrow" id="menorah-borrow" className="border-gold/60 text-gold data-[state=checked]:border-gold focus-visible:ring-gold/40" />
+                  <span className="text-base font-normal text-foreground/90 group-hover:text-gold transition-colors duration-200 leading-relaxed">
+                    I will borrow from Chabad
+                  </span>
+                </Label>
+              </RadioGroup>
+            </div>
+          )}
         </div>
 
         {/* Separator */}

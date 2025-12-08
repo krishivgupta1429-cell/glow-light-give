@@ -1,11 +1,42 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { z } from "https://esm.sh/zod@3.22.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Simple in-memory rate limiting
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 5; // 5 checkout attempts per minute per IP
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
+// Zod schema for input validation
+const checkoutSchema = z.object({
+  formSubmissionId: z.string().uuid("Invalid form submission ID"),
+  amount: z.number().positive("Amount must be positive").max(100000, "Amount too large"),
+  email: z.string().email("Invalid email").max(255),
+  fullName: z.string().min(1).max(200).optional(),
+});
 
 // Helper logging function
 const logStep = (step: string, details?: any) => {
@@ -22,6 +53,19 @@ serve(async (req) => {
   try {
     logStep("Starting checkout session creation");
 
+    // Rate limiting check
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                     req.headers.get("x-real-ip") || 
+                     "unknown";
+    
+    if (!checkRateLimit(clientIp)) {
+      logStep("Rate limit exceeded", { ip: clientIp });
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
+      );
+    }
+
     // Verify Stripe key is available
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
@@ -36,20 +80,21 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    const { formSubmissionId, amount, email, fullName } = await req.json();
+    const rawBody = await req.json();
 
-    logStep("Request data", { formSubmissionId, amount, email, fullName });
-
-    if (!formSubmissionId || !amount || !email) {
-      logStep("ERROR: Missing required parameters");
-      throw new Error("Missing required parameters");
+    // Validate input with zod schema
+    const parseResult = checkoutSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      logStep("ERROR: Validation failed", { errors: parseResult.error.errors });
+      return new Response(
+        JSON.stringify({ error: parseResult.error.errors[0]?.message || "Invalid input" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
-    // Validate amount is positive
-    if (amount <= 0) {
-      logStep("ERROR: Invalid amount", { amount });
-      throw new Error("Invalid amount");
-    }
+    const { formSubmissionId, amount, email, fullName } = parseResult.data;
+
+    logStep("Request data validated", { formSubmissionId, amount, email, fullName });
 
     // Initialize Stripe with live key
     const stripe = new Stripe(stripeKey, {

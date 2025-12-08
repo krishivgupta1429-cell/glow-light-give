@@ -123,7 +123,7 @@ const Index = () => {
             5:30 PM Parade departs Yavneh Academy<br />
             155 N. Farview Ave, Paramus<br />
             <a 
-              href="/assets/parade-route.png" 
+              href="/parade-route.html" 
               target="_blank" 
               rel="noopener noreferrer"
               className="parade-route-link inline-block my-2 cursor-pointer transition-all duration-200 underline font-normal italic hover:text-[#EDEDED]" 

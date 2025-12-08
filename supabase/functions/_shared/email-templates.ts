@@ -1,31 +1,6 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+// Shared email utilities for Chabad of Paramus
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-interface SubmitEntryBody {
-  full_name: string;
-  email: string;
-  area_code?: string | null;
-  phone_number?: string | null;
-  full_phone?: string | null;
-  number_of_adults: number;
-  number_of_children?: number;
-  reason: string;
-  reason_other?: string | null;
-  drive_in_parade?: string | null;
-  car_menorah_preference?: string | null;
-  sponsorships: string[];
-  email_updates_opt_in?: boolean;
-  wants_to_donate?: boolean;
-  verification_token: string;
-  verification_sent_at: string;
-}
-
-interface FormSubmission {
+export interface FormSubmission {
   id: string;
   full_name: string;
   email: string;
@@ -47,15 +22,34 @@ interface FormSubmission {
 /**
  * Determines if user signed up for the parade
  */
-function isParadeSignup(submission: FormSubmission): boolean {
+export function isParadeSignup(submission: FormSubmission): boolean {
   const value = submission.drive_in_parade?.toLowerCase();
   return value === "yes" || value === "true";
 }
 
 /**
+ * Determines if user is a donor (payment succeeded)
+ */
+export function isDonor(submission: FormSubmission): boolean {
+  return !!(
+    submission.payment_amount_cents &&
+    Number(submission.payment_amount_cents) > 0 &&
+    submission.payment_status === "success"
+  );
+}
+
+/**
+ * Formats cents to dollar string
+ */
+export function formatAmount(cents: number): string {
+  const dollars = cents / 100;
+  return Number.isInteger(dollars) ? `$${dollars}` : `$${dollars.toFixed(2)}`;
+}
+
+/**
  * Formats date to US-style datetime
  */
-function formatDateTime(dateString: string): string {
+export function formatDateTime(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleString("en-US", {
     month: "numeric",
@@ -84,7 +78,7 @@ function formatCarMenorahPreference(value: string | null | undefined): string {
 /**
  * Builds the HTML summary table for email
  */
-function buildSummaryTable(submission: FormSubmission): string {
+export function buildSummaryTable(submission: FormSubmission): string {
   const rows: Array<{ label: string; value: string }> = [];
 
   // Parse full_name into first/last if possible
@@ -148,16 +142,34 @@ interface EmailContent {
 }
 
 /**
- * Gets email content for NON-DONORS (parade vs non-parade)
+ * Gets the appropriate email content based on parade signup and donation status
  */
-function getNonDonorEmailContent(
+export function getEmailContent(
   submission: FormSubmission,
-  signedUpForParade: boolean
+  signedUpForParade: boolean,
+  hasDonated: boolean,
+  formattedAmount?: string,
+  reference?: string
 ): EmailContent {
   const summaryTable = buildSummaryTable(submission);
   const fullName = submission.full_name;
 
-  if (signedUpForParade) {
+  if (signedUpForParade && hasDonated) {
+    // 4.1 Signed up for Parade – with donation
+    return {
+      subject: "Thank you for signing up for the Menorah Parade!",
+      htmlContent: `<p>Dear ${fullName},</p>
+<p>Your registration has been received.</p>
+${summaryTable}
+<p>Please be sure to arrive at Yavneh Academy by 5pm so we can stage the parade. We anticipate a parade departure of 5:30 PM, followed by arrival at Borough Hall at 6 PM.</p>
+<p>Your donation of ${formattedAmount} is greatly appreciated and will help us provide a meaningful Chanukah to Jews across Paramus.</p>
+<p>See you next week!</p>
+<p>Rabbi Levi and Mussi Marasow<br/>
+Chabad of Paramus</p>`,
+    };
+  }
+
+  if (signedUpForParade && !hasDonated) {
     // 4.2 Signed up for Parade – without donation
     return {
       subject: "Thank you for signing up for the Menorah Parade!",
@@ -166,6 +178,20 @@ function getNonDonorEmailContent(
 ${summaryTable}
 <p>Please be sure to arrive at Yavneh Academy by 5pm so we can stage the parade. We anticipate a parade departure of 5:30 PM, followed by arrival at Borough Hall at 6 PM.</p>
 <p>See you next week!</p>
+<p>Rabbi Levi and Mussi Marasow<br/>
+Chabad of Paramus</p>`,
+    };
+  }
+
+  if (!signedUpForParade && hasDonated) {
+    // 4.3 Didn't sign up for parade – with donation
+    return {
+      subject: "Thank you for your Chanukah registration and donation!",
+      htmlContent: `<p>Dear ${fullName},</p>
+<p>Your registration has been received.</p>
+${summaryTable}
+<p>Thank you for your generous donation of ${formattedAmount} which will help spread the light of Chanukah across Paramus. We look forward to seeing you at 1 Jockish Sq on December 14 at 6 PM.</p>
+<p>Happy Chanukah!</p>
 <p>Rabbi Levi and Mussi Marasow<br/>
 Chabad of Paramus</p>`,
     };
@@ -184,16 +210,32 @@ Chabad of Paramus</p>`,
 }
 
 /**
- * Sends confirmation email for NON-DONORS via Brevo
+ * Sends the appropriate confirmation email via Brevo
  */
-async function sendNonDonorConfirmationEmail(submission: FormSubmission): Promise<void> {
+export async function sendConfirmationEmail(
+  submission: FormSubmission
+): Promise<void> {
   const apiKey = Deno.env.get("BREVO_API_KEY");
   if (!apiKey) {
     throw new Error("Missing BREVO_API_KEY");
   }
 
   const signedUpForParade = isParadeSignup(submission);
-  const { subject, htmlContent } = getNonDonorEmailContent(submission, signedUpForParade);
+  const hasDonated = isDonor(submission);
+  
+  const formattedAmount = hasDonated && submission.payment_amount_cents 
+    ? formatAmount(submission.payment_amount_cents) 
+    : undefined;
+  
+  const reference = submission.stripe_payment_intent_id || submission.id;
+
+  const { subject, htmlContent } = getEmailContent(
+    submission,
+    signedUpForParade,
+    hasDonated,
+    formattedAmount,
+    reference
+  );
 
   // Parse name for the "to" field
   const nameParts = submission.full_name.trim().split(/\s+/);
@@ -204,12 +246,12 @@ async function sendNonDonorConfirmationEmail(submission: FormSubmission): Promis
   const payload = {
     sender: { name: "Chabad of Paramus", email: "rabbi@chabadparamus.org" },
     to: [{ email: submission.email, name: toName }],
-    // No BCC
+    // No BCC - removed as requested
     subject,
     htmlContent,
   };
 
-  console.log(`[email] Sending ${signedUpForParade ? "parade" : "non-parade"} non-donor email to ${submission.email}`);
+  console.log(`[email] Sending ${signedUpForParade ? "parade" : "non-parade"} ${hasDonated ? "donor" : "non-donor"} email to ${submission.email}`);
 
   const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
@@ -227,105 +269,3 @@ async function sendNonDonorConfirmationEmail(submission: FormSubmission): Promis
 
   console.log(`[email] Successfully sent to ${submission.email}`);
 }
-
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
-    );
-
-    const body = (await req.json()) as Partial<SubmitEntryBody>;
-
-    // Minimal validation of required fields
-    if (!body.full_name || !body.email || !body.reason || !body.verification_token || !body.verification_sent_at || body.number_of_adults === undefined) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
-    }
-
-    // Compute full_phone if not provided but parts are
-    let full_phone = body.full_phone ?? null;
-    if (!full_phone && body.area_code && body.phone_number) {
-      full_phone = `${body.area_code}${body.phone_number}`;
-    }
-
-    // Prepare insert payload
-    const insertPayload = {
-      full_name: body.full_name.trim(),
-      email: body.email.trim().toLowerCase(),
-      area_code: body.area_code?.trim() ?? null,
-      phone_number: body.phone_number?.trim() ?? null,
-      full_phone,
-      number_of_adults: body.number_of_adults,
-      number_of_children: body.number_of_children ?? 0,
-      reason: body.reason,
-      reason_other: body.reason_other?.trim() ?? null,
-      drive_in_parade: body.drive_in_parade?.trim() ?? null,
-      car_menorah_preference: body.car_menorah_preference?.trim() ?? null,
-      sponsorships: body.sponsorships ?? [],
-      email_updates_opt_in: body.email_updates_opt_in ?? false,
-      wants_to_donate: body.wants_to_donate ?? false,
-      verification_token: body.verification_token,
-      verification_sent_at: body.verification_sent_at,
-      payment_status: body.wants_to_donate ? "pending" : "none",
-    };
-
-    const { data, error } = await supabaseAdmin
-      .from("form_submissions")
-      .insert(insertPayload)
-      .select("id, created_at")
-      .single();
-
-    if (error) {
-      console.error("[submit-form-entry] Insert error:", error);
-      return new Response(
-        JSON.stringify({ error: "Insert failed" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-      );
-    }
-
-    // Send registration confirmation email only for NON-donors
-    // Donors will receive their email after payment success
-    if (!body.wants_to_donate) {
-      const submissionForEmail: FormSubmission = {
-        id: data.id,
-        full_name: insertPayload.full_name,
-        email: insertPayload.email,
-        area_code: insertPayload.area_code,
-        phone_number: insertPayload.phone_number,
-        full_phone: insertPayload.full_phone,
-        number_of_adults: insertPayload.number_of_adults,
-        number_of_children: insertPayload.number_of_children,
-        drive_in_parade: insertPayload.drive_in_parade,
-        car_menorah_preference: insertPayload.car_menorah_preference,
-        email_updates_opt_in: insertPayload.email_updates_opt_in,
-        sponsorships: insertPayload.sponsorships,
-        created_at: data.created_at,
-        payment_status: "none",
-      };
-
-      sendNonDonorConfirmationEmail(submissionForEmail).catch(err => {
-        console.error("[submit-form-entry] Email sending failed but continuing:", err);
-      });
-    }
-
-    return new Response(JSON.stringify({ id: data.id }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
-  } catch (err) {
-    console.error("[submit-form-entry] Unexpected error:", err);
-    return new Response(
-      JSON.stringify({ error: "Unexpected error" }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-    );
-  }
-});

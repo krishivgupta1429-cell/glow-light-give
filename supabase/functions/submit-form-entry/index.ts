@@ -1,29 +1,53 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { z } from "https://esm.sh/zod@3.22.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface SubmitEntryBody {
-  full_name: string;
-  email: string;
-  area_code?: string | null;
-  phone_number?: string | null;
-  full_phone?: string | null;
-  number_of_adults: number;
-  number_of_children?: number;
-  reason: string;
-  reason_other?: string | null;
-  drive_in_parade?: string | null;
-  car_menorah_preference?: string | null;
-  sponsorships: string[];
-  email_updates_opt_in?: boolean;
-  wants_to_donate?: boolean;
-  verification_token: string;
-  verification_sent_at: string;
+// Simple in-memory rate limiting (resets when function cold starts)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 10; // 10 requests per minute per IP
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
 }
+
+// Zod schema for input validation
+const submitEntrySchema = z.object({
+  full_name: z.string().trim().min(1, "Name is required").max(200, "Name too long"),
+  email: z.string().trim().email("Invalid email").max(255, "Email too long").toLowerCase(),
+  area_code: z.string().max(10).nullable().optional(),
+  phone_number: z.string().max(20).nullable().optional(),
+  full_phone: z.string().max(30).nullable().optional(),
+  number_of_adults: z.number().int().nonnegative().max(100, "Invalid number of adults"),
+  number_of_children: z.number().int().nonnegative().max(100).optional().default(0),
+  reason: z.string().min(1, "Reason is required").max(100),
+  reason_other: z.string().max(500).nullable().optional(),
+  drive_in_parade: z.string().max(50).nullable().optional(),
+  car_menorah_preference: z.string().max(100).nullable().optional(),
+  sponsorships: z.array(z.string().max(100)).max(10).default([]),
+  email_updates_opt_in: z.boolean().optional().default(false),
+  wants_to_donate: z.boolean().optional().default(false),
+  verification_token: z.string().length(64, "Invalid verification token"),
+  verification_sent_at: z.string().datetime(),
+});
 
 interface FormSubmission {
   id: string;
@@ -235,21 +259,38 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting check
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                     req.headers.get("x-real-ip") || 
+                     "unknown";
+    
+    if (!checkRateLimit(clientIp)) {
+      console.log(`[submit-form-entry] Rate limit exceeded for IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
+      );
+    }
+
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
-    const body = (await req.json()) as Partial<SubmitEntryBody>;
+    const rawBody = await req.json();
 
-    // Minimal validation of required fields
-    if (!body.full_name || !body.email || !body.reason || !body.verification_token || !body.verification_sent_at || body.number_of_adults === undefined) {
+    // Validate input with zod schema
+    const parseResult = submitEntrySchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      console.log("[submit-form-entry] Validation error:", parseResult.error.errors);
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({ error: parseResult.error.errors[0]?.message || "Invalid input" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
+
+    const body = parseResult.data;
 
     // Compute full_phone if not provided but parts are
     let full_phone = body.full_phone ?? null;

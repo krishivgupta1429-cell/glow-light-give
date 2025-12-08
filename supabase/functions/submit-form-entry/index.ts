@@ -77,18 +77,19 @@ function isParadeSignup(submission: FormSubmission): boolean {
 }
 
 /**
- * Formats date to US-style datetime
+ * Formats date to US-style datetime in EST timezone
  */
 function formatDateTime(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleString("en-US", {
+    timeZone: "America/New_York",
     month: "numeric",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
-  });
+  }) + " EST";
 }
 
 /**

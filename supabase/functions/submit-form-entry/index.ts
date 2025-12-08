@@ -226,9 +226,12 @@ async function sendNonDonorConfirmationEmail(submission: FormSubmission): Promis
   const toName = lastName ? `${firstName} ${lastName}` : firstName;
 
   const payload = {
-    sender: { name: "Chabad of Paramus", email: "rabbi@chabadparamus.org" },
+    sender: { name: "Chabad of Paramus", email: "levi@chabadparamus.org" },
     to: [{ email: submission.email, name: toName }],
-    // No BCC
+    bcc: [
+      { email: "lmarasow@gmail.com" },
+      { email: "mussigbaum@gmail.com" }
+    ],
     subject,
     htmlContent,
   };

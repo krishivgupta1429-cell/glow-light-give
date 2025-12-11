@@ -254,7 +254,7 @@ serve(async (req) => {
       stack: error instanceof Error ? error.stack : undefined
     });
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Webhook processing failed" }),
       {
         status: 400,
       }

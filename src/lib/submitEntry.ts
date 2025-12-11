@@ -140,23 +140,7 @@ export async function submitEntry(
 
     const data = { id: insertData.id as string };
 
-
-    // Send verification email
-    try {
-      const { error: emailError } = await supabase.functions.invoke('send-verification-email', {
-        body: {
-          email: formData.email.trim().toLowerCase(),
-          name: formData.fullName.trim(),
-          token: verificationToken,
-        },
-      });
-
-      if (emailError) {
-        console.error("Error sending verification email:", emailError);
-      }
-    } catch (emailError) {
-      console.error("Error invoking send-verification-email function:", emailError);
-    }
+    // Note: Confirmation emails are sent by submit-form-entry edge function via Brevo
 
     console.log("Created form_submissions row with id:", data.id);
 

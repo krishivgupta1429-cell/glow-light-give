@@ -413,7 +413,7 @@ serve(async (req) => {
       stack: error instanceof Error ? error.stack : undefined
     });
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "An error occurred while verifying your payment. Please try again." }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
